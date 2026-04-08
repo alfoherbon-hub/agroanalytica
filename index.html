@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgroAnalítica UY</title>
+  <style>
+    :root{
+      --primary:#1D9E75; --primary-dark:#15785a; --bg:#f4f8f6; --card:#fff;
+      --text:#1f2937; --muted:#6b7280; --border:#d1d5db;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{background:linear-gradient(120deg,var(--primary),var(--primary-dark));color:#fff;padding:1.4rem 1rem;text-align:center}
+    header h1{margin:0;font-size:clamp(1.4rem,3vw,2rem)} header p{margin:.35rem 0 0;opacity:.95}
+    nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+    .nav-wrap{max-width:1100px;margin:0 auto;padding:.6rem;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem}
+    .tab-btn{border:1px solid var(--border);background:#fff;padding:.65rem .5rem;border-radius:10px;cursor:pointer;font-weight:600}
+    .tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    main{max-width:1100px;margin:1rem auto;padding:0 .8rem 2rem}
+    section.module{display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;box-shadow:0 6px 14px rgba(0,0,0,.05)}
+    section.module.active{display:block}
+    h2{margin-top:0;color:var(--primary-dark)}
+    .hint{color:var(--muted);margin:-.2rem 0 .8rem}
+    .grid{display:grid;gap:.8rem;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .field{display:flex;flex-direction:column;gap:.25rem}
+    label{font-size:.9rem;font-weight:600;color:#374151}
+    input[type="number"]{border:1px solid var(--border);border-radius:10px;padding:.55rem .6rem}
+    .block-title{margin:1rem 0 .5rem;font-weight:700;color:#0f5132;border-left:4px solid var(--primary);padding-left:.5rem}
+    .results{margin-top:1rem;display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .result-card{border:1px solid var(--border);border-radius:12px;padding:.75rem;background:#f9fffc}
+    .result-card .name{color:var(--muted);font-size:.86rem}
+    .result-card .value{margin-top:.2rem;font-weight:800;font-size:1.12rem;color:var(--primary-dark)}
+    .toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0}
+    .btn{background:var(--primary);color:#fff;border:none;padding:.55rem .8rem;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#0f766e}
+    .table-wrap{overflow:auto;margin-top:1rem}
+    table{width:100%;border-collapse:collapse;min-width:620px;background:#fff;border:1px solid var(--border)}
+    th,td{padding:.65rem;border-bottom:1px solid var(--border);text-align:left;font-size:.92rem}
+    th{background:#eaf7f2;color:#0f5132}
+    .chart-wrap{margin-top:1rem;border:1px solid var(--border);border-radius:12px;padding:.7rem;background:#fff}
+    canvas{width:100%;height:240px;display:block}
+    .soon{padding:1.1rem;border:1px dashed var(--border);border-radius:12px;text-align:center;font-weight:700;color:var(--muted);background:#fff}
+    .small-note{font-size:.84rem;color:var(--muted)}
+    footer{margin-top:1.5rem;border-top:1px solid var(--border);background:#fff;color:var(--muted);text-align:center;padding:1rem;font-size:.9rem}
+    @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.results{grid-template-columns:1fr}}
+    @media (max-width:600px){.nav-wrap{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+    /* Print header (solo visible al imprimir) */
+    .print-header{display:none;text-align:center;padding:1.5rem 0 1rem;border-bottom:3px solid var(--primary);margin-bottom:1rem}
+    .print-header h1{margin:0;font-size:1.8rem;color:var(--primary-dark);letter-spacing:.5px}
+    .print-header .print-sub{color:var(--muted);margin:.3rem 0 0;font-size:1rem}
+    .print-header .print-date{font-size:.85rem;color:var(--muted);margin-top:.5rem}
+    /* Valor negativo */
+    .result-card .value.negative{color:#dc2626}
+    /* Botones hover */
+    .btn{transition:all .15s ease}
+    .btn:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-pdf{display:inline-flex;align-items:center;gap:.4rem}
+    .scenario-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.8rem;padding:.6rem;background:#eaf7f2;border-radius:10px}
+    .scenario-bar label{font-weight:700;font-size:.9rem;white-space:nowrap}
+    .scenario-bar select{border:1px solid var(--border);border-radius:10px;padding:.45rem .6rem;font-size:.88rem;background:#fff;cursor:pointer;min-width:260px}
+    .ref-table{margin-top:1rem}
+    .ref-table td:first-child{font-weight:600}
+    .ref-table .user-col{color:var(--primary-dark);font-weight:800}
+    .ref-table .fuente{font-size:.78rem;color:var(--muted)}
+    /* Print */
+    @page{margin:1.5cm}
+    @media print{
+      body{background:#fff;font-size:11pt}
+      header,nav,.toolbar,.hint,.block-title,.grid{display:none!important}
+      .print-header{display:block!important}
+      section.module{display:block!important;break-inside:avoid;page-break-inside:avoid;box-shadow:none;border:none;margin-bottom:.5rem;padding:.5rem 0}
+      section.module:has(.soon){display:none!important}
+      .results{grid-template-columns:repeat(3,1fr)!important}
+      .result-card{border:2px solid var(--primary);background:#f0faf5}
+      .result-card .value{font-size:1.15rem}
+      table{font-size:.9rem}
+      .chart-wrap{break-inside:avoid;page-break-inside:avoid}
+      footer{display:block!important;border-top:2px solid var(--primary);padding:.8rem;font-size:.8rem;margin-top:1rem}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AgroAnalítica UY</h1>
+    <p>Análisis económico para el agro uruguayo</p>
+  </header>
+  <div class="print-header">
+    <h1>AgroAnalítica UY</h1>
+    <div class="print-sub">Análisis económico para el agro uruguayo</div>
+    <div class="print-date" id="print-date"></div>
+  </div>
+  <nav>
+    <div class="nav-wrap">
+      <button class="tab-btn active" data-target="horticultura">Horticultura</button>
+      <button class="tab-btn" data-target="ganaderia">Ganadería</button>
+      <button class="tab-btn" data-target="forrajero">Balance Forrajero</button>
+      <button class="tab-btn" data-target="flujo">Flujo de Fondos</button>
+    </div>
+  </nav>
+  <main>
+    <div class="toolbar">
+      <button class="btn" id="btnCsv">Exportar CSV (Excel)</button>
+      <button class="btn secondary btn-pdf" id="btnPdf">&#128196; Generar informe PDF</button>
+    </div>
+    <section id="horticultura" class="module active">
+      <h2>Horticultura</h2>
+      <p class="hint">Valores por defecto: tomate en invernáculo (Litoral Norte). Ajustá según tu cultivo. Guardado automático.</p>
+      <!-- Valores por defecto: tomate en invernáculo, Litoral Norte UY
+           Rendimiento: 12,1 kg/m² — MGAP/DIEA Encuesta Hortícola Litoral Norte 2016
+           Precio: $50/kg — UAM boletín mayorista, marzo 2026
+           Pérdidas: 15% — estimado descarte + merma (INIA Revista 58, 2019)
+           Costos: estructura 40% mano de obra, 13% fertilizantes (ref. Rel-UITA/INIA)
+           Inversión: ~USD 5-6/m² invernáculo básico (Rel-UITA, escalado a 2026)
+           TC referencia: 1 USD ≈ 40,54 UYU (BCU/Infobae, abril 2026) -->
+      <div class="block-title">Parámetros productivos</div>
+      <div class="grid">
+        <div class="field"><label>Superficie (m²)</label><input id="h_sup" type="number" min="0" value="5000"></div>
+        <div class="field"><label>Ciclos por año</label><input id="h_ciclos" type="number" min="0" step="1" value="2"></div>
+        <div class="field"><label>Rendimiento (kg/m²)</label><input id="h_rend" type="number" min="0" step="0.01" value="12"></div>
+        <div class="field"><label>Precio de venta ($/kg)</label><input id="h_precio" type="number" min="0" step="0.01" value="50"></div>
+        <div class="field"><label>Pérdidas post-cosecha (%)</label><input id="h_perdidas" type="number" min="0" max="100" step="0.1" value="15"></div>
+      </div>
+      <div class="block-title">Costos por ciclo</div>
+      <div class="grid">
+        <div class="field"><label>Plantines ($)</label><input id="h_plantines" type="number" min="0" value="140000"></div>
+        <div class="field"><label>Fertilizantes ($)</label><input id="h_fert" type="number" min="0" value="85000"></div>
+        <div class="field"><label>Mano de obra ($)</label><input id="h_mano" type="number" min="0" value="350000"></div>
+        <div class="field"><label>Agua/riego ($)</label><input id="h_agua" type="number" min="0" value="35000"></div>
+        <div class="field"><label>Otros ($)</label><input id="h_otros" type="number" min="0" value="90000"></div>
+      </div>
+      <div class="block-title">Inversión</div>
+      <div class="grid">
+        <div class="field"><label>Inversión inicial ($)</label><input id="h_inv" type="number" min="0" value="1100000"></div>
+        <div class="field"><label>Vida útil inversión (años)</label><input id="h_vida" type="number" min="1" step="1" value="10"></div>
+      </div>
+      <div class="results">
+        <div class="result-card"><div class="name">Producción neta por ciclo (kg)</div><div class="value" id="r_prod_neta">-</div></div>
+        <div class="result-card"><div class="name">Ingreso bruto por ciclo ($)</div><div class="value" id="r_ing_bruto">-</div></div>
+        <div class="result-card"><div class="name">Total costos por ciclo ($)</div><div class="value" id="r_costos">-</div></div>
+        <div class="result-card"><div class="name">Resultado neto por ciclo ($)</div><div class="value" id="r_neto_ciclo">-</div></div>
+        <div class="result-card"><div class="name">Resultado neto anual ($)</div><div class="value" id="r_neto_anual">-</div></div>
+        <div class="result-card"><div class="name">Período de recupero (años)</div><div class="value" id="r_payback">-</div></div>
+      </div>
+    </section>
+    <section id="ganaderia" class="module">
+      <h2>Ganadería</h2>
+      <p class="hint">Comparación orientativa de sistemas con margen anual y por há.</p>
+      <!-- Precios kg vivo: Pantalla Uruguay Remate 310 (25/03/2026)
+           Novillo 2-3 años USD 3,07/kg × TC 40,54 ≈ $124/kg
+           Ternero USD 4,10/kg × TC 40,54 ≈ $166/kg
+           Mano obra: ~1,5 peones rurales + cargas sociales (BPC 2026: $6.864, BPS)
+           Gastos fijos: contrib. inmobiliaria, seguros, mant., combustible -->
+      <div class="grid">
+        <div class="field"><label>Superficie (há)</label><input id="g_sup" type="number" min="0" value="300"></div>
+        <div class="field"><label>Precio novillo ($/kg)</label><input id="g_p_novillo" type="number" min="0" step="0.01" value="124"></div>
+        <div class="field"><label>Precio ternero ($/kg)</label><input id="g_p_ternero" type="number" min="0" step="0.01" value="166"></div>
+        <div class="field"><label>Mano de obra anual ($)</label><input id="g_mano_anual" type="number" min="0" value="1500000"></div>
+        <div class="field"><label>Gastos fijos anuales ($)</label><input id="g_gfijos" type="number" min="0" value="800000"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sistema</th>
+              <th>Margen neto anual ($)</th>
+              <th>Margen neto por há ($/ha)</th>
+            </tr>
+          </thead>
+          <tbody id="g_table_body"></tbody>
+        </table>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="g_chart" width="900" height="240"></canvas>
+      </div>
+    </section>
+    <section id="forrajero" class="module">
+      <h2>Balance Forrajero</h2>
+      <p class="hint">Oferta vs demanda forrajera mensual. Datos por defecto: referencias reales de Uruguay.</p>
+      <!-- Fuentes: Plan Agropecuario (RING, SEGF satelital, Revistas 132/135/138)
+           INIA (mezclas forrajeras, catálogo forrajeras, verdeos Condón et al. 2023)
+           MGAP/OPYPA Anuario 2022 (producción ganadera pastoril 2005-2021)
+           FAGRO (equivalencias ganaderas, balance forrajero)
+           Campo natural 3.500 kg MS/ha/año, pradera 9.000, verdeo inv. 5.000, verdeo ver. 7.000
+           Aprovechamiento: CN 50%, pradera 65%, verdeo inv. 70%, verdeo ver. 60%
+           1 UG = vaca 380 kg que gesta y desteta ternero (Plan Agropecuario)
+           Requerimiento: 9,5 kg MS/día por UG -->
+      <div class="block-title">Superficie por tipo de pastura (ha)</div>
+      <div class="grid">
+        <div class="field"><label>Campo natural</label><input id="bf_cn" type="number" min="0" value="200"></div>
+        <div class="field"><label>Pradera</label><input id="bf_pr" type="number" min="0" value="60"></div>
+        <div class="field"><label>Verdeo invierno</label><input id="bf_vi" type="number" min="0" value="25"></div>
+        <div class="field"><label>Verdeo verano</label><input id="bf_vv" type="number" min="0" value="15"></div>
+      </div>
+      <div class="block-title">Producción forrajera (kg MS/ha/año) y aprovechamiento</div>
+      <div class="grid">
+        <div class="field"><label>Prod. campo natural</label><input id="bf_cn_prod" type="number" min="0" value="3500"></div>
+        <div class="field"><label>Prod. pradera</label><input id="bf_pr_prod" type="number" min="0" value="9000"></div>
+        <div class="field"><label>Prod. verdeo inv.</label><input id="bf_vi_prod" type="number" min="0" value="5000"></div>
+        <div class="field"><label>Prod. verdeo ver.</label><input id="bf_vv_prod" type="number" min="0" value="7000"></div>
+        <div class="field"><label>Aprovech. campo nat. (%)</label><input id="bf_cn_apr" type="number" min="0" max="100" value="50"></div>
+        <div class="field"><label>Aprovech. pradera (%)</label><input id="bf_pr_apr" type="number" min="0" max="100" value="65"></div>
+      </div>
+      <div class="block-title">Rodeo (cabezas)</div>
+      <div class="grid">
+        <div class="field"><label>Vacas de cría</label><input id="bf_vacas" type="number" min="0" value="150"></div>
+        <div class="field"><label>Terneros/as</label><input id="bf_terneros" type="number" min="0" value="100"></div>
+        <div class="field"><label>Novillos</label><input id="bf_novillos" type="number" min="0" value="30"></div>
+        <div class="field"><label>Vaquillonas</label><input id="bf_vaquillonas" type="number" min="0" value="40"></div>
+        <div class="field"><label>Toros</label><input id="bf_toros" type="number" min="0" value="6"></div>
+      </div>
+      <div class="results">
+        <div class="result-card"><div class="name">Carga total (UG)</div><div class="value" id="r_bf_ug">-</div></div>
+        <div class="result-card"><div class="name">Carga (UG/ha)</div><div class="value" id="r_bf_ugha">-</div></div>
+        <div class="result-card"><div class="name">Oferta anual (kg MS)</div><div class="value" id="r_bf_oferta">-</div></div>
+        <div class="result-card"><div class="name">Demanda anual (kg MS)</div><div class="value" id="r_bf_demanda">-</div></div>
+        <div class="result-card"><div class="name">Balance anual (kg MS)</div><div class="value" id="r_bf_balance">-</div></div>
+        <div class="result-card"><div class="name">Meses con déficit</div><div class="value" id="r_bf_deficit">-</div></div>
+      </div>
+      <p class="small-note">Verde = oferta forrajera disponible · Naranja = demanda del rodeo</p>
+      <div class="chart-wrap">
+        <canvas id="bf_chart" width="900" height="240"></canvas>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Oferta (kg MS)</th>
+              <th>Demanda (kg MS)</th>
+              <th>Balance (kg MS)</th>
+            </tr>
+          </thead>
+          <tbody id="bf_table_body"></tbody>
+        </table>
+      </div>
+    </section>
+    <section id="flujo" class="module">
+      <h2>Flujo de Fondos</h2>
+      <p class="hint">Modelo mensual de 12 meses con saldo acumulado.</p>
+      <!-- Flujo orientativo para explotación hortícola mediana (5000 m²) -->
+      <div class="grid">
+        <div class="field"><label>Ingresos promedio mensuales ($)</label><input id="f_ingresos" type="number" min="0" value="600000"></div>
+        <div class="field"><label>Costos variables mensuales ($)</label><input id="f_cvar" type="number" min="0" value="250000"></div>
+        <div class="field"><label>Costos fijos mensuales ($)</label><input id="f_cfijo" type="number" min="0" value="150000"></div>
+        <div class="field"><label>Inversión (mes 1) ($)</label><input id="f_inversion" type="number" min="0" value="500000"></div>
+        <div class="field"><label>Saldo inicial ($)</label><input id="f_saldo_ini" type="number" value="0"></div>
+      </div>
+      <p class="small-note">Supuesto: la inversión se descuenta completa en el mes 1.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Ingresos</th>
+              <th>Costos variables</th>
+              <th>Costos fijos</th>
+              <th>Inversión</th>
+              <th>Saldo mensual</th>
+              <th>Saldo acumulado</th>
+            </tr>
+          </thead>
+          <tbody id="f_table_body"></tbody>
+        </table>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="f_chart" width="900" height="240"></canvas>
+      </div>
+    </section>
+  </main>
+  <footer>Proyecto UCU – Ingeniería Agronómica 2026 · AgroAnalítica UY – Herramienta de apoyo para análisis económico agropecuario</footer>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function fmtNum(n,d=0){const s=n<0?'-':'';const a=Math.abs(n).toFixed(d);const[i,f]=a.split('.');return s+i.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(f?','+f:'');}
+    const moneyUYU={format:n=>'$ '+fmtNum(n)};
+    const numUY={format:n=>fmtNum(n,2)};
+    /* ═══════════════════════════════════════════════════════════════════
+       FUENTES DE DATOS (abril 2026)
+       ─────────────────────────────────────────────────────────────────
+       Horticultura:
+         • Rendimiento tomate invernáculo 12,1 kg/m² — MGAP/DIEA Encuesta
+           Hortícola Litoral Norte 2016 (gub.uy/mgap)
+         • Precio tomate mayorista $50/kg — UAM boletín marzo 2026 (uam.com.uy)
+         • Estructura de costos — Rel-UITA e INIA Revista Nº 58, 2019 (inia.uy)
+         • Inversión invernáculo ~USD 5-6/m² — Rel-UITA (rel-uita.org)
+       Ganadería:
+         • Ternero USD 4,10/kg, Novillo USD 3,07/kg vivo — Pantalla Uruguay
+           Remate 310, 25/03/2026 (pantallauruguay.com.uy)
+         • Resultado cría ~USD 130/ha — Tardaguila/APEO proyección 2025/26
+         • Carga 0,84 UG/ha — RING Plan Agropecuario, marzo 2025
+         • Costos variables cría ~USD 104/ha — Revista Verde / APEO 2023/24
+       General:
+         • TC: 1 USD ≈ 40,54 UYU — BCU/Infobae, 07/04/2026
+         • BPC 2026: $6.864 — BPS (bps.gub.uy), enero 2026
+       ═══════════════════════════════════════════════════════════════════ */
+    const STORAGE_KEY = "agroanalitica_uy_v5";
+    const allInputIds = [
+      "h_sup","h_ciclos","h_rend","h_precio","h_perdidas","h_plantines","h_fert","h_mano","h_agua","h_otros","h_inv","h_vida",
+      "g_sup","g_p_novillo","g_p_ternero","g_mano_anual","g_gfijos",
+      "f_ingresos","f_cvar","f_cfijo","f_inversion","f_saldo_ini",
+      "bf_cn","bf_pr","bf_vi","bf_vv","bf_cn_prod","bf_pr_prod","bf_vi_prod","bf_vv_prod",
+      "bf_cn_apr","bf_pr_apr","bf_vacas","bf_terneros","bf_novillos","bf_vaquillonas","bf_toros"
+    ];
+    function v(id){ const n = parseFloat($(id).value); return Number.isFinite(n)?n:0; }
+    // Tabs
+    document.querySelectorAll(".tab-btn").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const target = btn.dataset.target;
+        document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll(".module").forEach(m=>m.classList.toggle("active",m.id===target));
+      });
+    });
+    // Horticultura
+    function calcHorticultura(){
+      const superficie=v("h_sup"), ciclos=v("h_ciclos"), rendimiento=v("h_rend"), precio=v("h_precio"), perd=v("h_perdidas")/100;
+      const plant=v("h_plantines"), fert=v("h_fert"), mano=v("h_mano"), agua=v("h_agua"), otros=v("h_otros");
+      const inv=v("h_inv"), vida=Math.max(1,v("h_vida"));
+      const prodNeta = superficie*rendimiento*(1-perd);
+      const ingresoBruto = prodNeta*precio;
+      const costosCiclo = plant+fert+mano+agua+otros;
+      const amortAnual = inv/vida;
+      const amortCiclo = ciclos>0? amortAnual/ciclos : 0;
+      const netoCiclo = ingresoBruto-costosCiclo-amortCiclo;
+      const netoAnual = netoCiclo*ciclos;
+      const payback = netoAnual>0 ? inv/netoAnual : null;
+      $("r_prod_neta").textContent = numUY.format(prodNeta);
+      $("r_ing_bruto").textContent = moneyUYU.format(ingresoBruto);
+      $("r_costos").textContent = moneyUYU.format(costosCiclo);
+      $("r_neto_ciclo").textContent = moneyUYU.format(netoCiclo);
+      $("r_neto_ciclo").classList.toggle("negative", netoCiclo < 0);
+      $("r_neto_anual").textContent = moneyUYU.format(netoAnual);
+      $("r_neto_anual").classList.toggle("negative", netoAnual < 0);
+      $("r_payback").textContent = payback ? `${numUY.format(payback)} años` : "No recuperable";
+      return {prodNeta,ingresoBruto,costosCiclo,netoCiclo,netoAnual,payback};
+    }
+    // Ganadería
+    /* Sistemas ganaderos — kg/ha y costos variables calibrados para producir
+       márgenes consistentes con datos APEO/Tardaguila 2025-26:
+       - Cría: ~USD 130/ha neto (APEO proyección 2025/26)
+       - Recría praderas: ~USD 90/ha
+       - Recría campo natural: ~USD 55/ha
+       Producción carne ref.: 85-120 kg/ha (Revista Verde, RING Plan Agropecuario)
+       Carga promedio nacional: 0,84 UG/ha (RING marzo 2025, 376 productores) */
+    const sistemas = [
+      {nombre:"Cría + suplementación",kgNovilloHa:45,kgTerneroHa:75,costoVarHa:5000},
+      {nombre:"Recría + praderas",kgNovilloHa:120,kgTerneroHa:45,costoVarHa:11000},
+      {nombre:"Recría campo natural",kgNovilloHa:85,kgTerneroHa:35,costoVarHa:6500}
+    ];
+    let lastGanaderia = [];
+    function calcGanaderia(){
+      const ha=Math.max(0,v("g_sup")), pN=v("g_p_novillo"), pT=v("g_p_ternero"), mano=v("g_mano_anual"), gf=v("g_gfijos");
+      const estructuraHa = ha>0 ? (mano+gf)/ha : 0;
+      const tbody=$("g_table_body");
+      tbody.innerHTML="";
+      lastGanaderia = sistemas.map(s=>{
+        const ingresoHa = s.kgNovilloHa*pN + s.kgTerneroHa*pT;
+        const margenHa = ingresoHa - s.costoVarHa - estructuraHa;
+        const margenAnual = margenHa*ha;
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${s.nombre}</td><td>${moneyUYU.format(margenAnual)}</td><td>${moneyUYU.format(margenHa)}</td>`;
+        tbody.appendChild(tr);
+        return {sistema:s.nombre,margenAnual,margenHa};
+      });
+      drawBarChart("g_chart", lastGanaderia.map(x=>x.sistema), lastGanaderia.map(x=>x.margenHa));
+      return lastGanaderia;
+    }
+    // Flujo de Fondos (12 meses)
+    let lastFlujo = [];
+    function calcFlujo(){
+      const ingresos = v("f_ingresos");
+      const cvar = v("f_cvar");
+      const cfijo = v("f_cfijo");
+      const inversion = v("f_inversion");
+      const saldoIni = v("f_saldo_ini");
+      const tbody = $("f_table_body");
+      tbody.innerHTML = "";
+      lastFlujo = [];
+      let acumulado = saldoIni;
+      for(let mes=1; mes<=12; mes++){
+        const invMes = mes===1 ? inversion : 0;
+        const saldoMensual = ingresos - cvar - cfijo - invMes;
+        acumulado += saldoMensual;
+        const row = {
+          mes,
+          ingresos,
+          cvar,
+          cfijo,
+          inversion: invMes,
+          saldoMensual,
+          acumulado
+        };
+        lastFlujo.push(row);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${mes}</td>
+          <td>${moneyUYU.format(ingresos)}</td>
+          <td>${moneyUYU.format(cvar)}</td>
+          <td>${moneyUYU.format(cfijo)}</td>
+          <td>${moneyUYU.format(invMes)}</td>
+          <td>${moneyUYU.format(saldoMensual)}</td>
+          <td>${moneyUYU.format(acumulado)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      drawLineChart("f_chart", lastFlujo.map(x=>`M${x.mes}`), lastFlujo.map(x=>x.acumulado));
+      return lastFlujo;
+    }
+    // Balance Forrajero
+    /* Distribución mensual (% del total anual, Ene=0..Dic=11)
+       Fuente: curvas satelitales LART/Plan Agropecuario SEGF 2001-2017;
+       INIA evaluaciones de praderas y verdeos */
+    const BF_DIST = {
+      cn:[13,12,8,7,5,4,4,7,8,11,11,10],
+      pr:[5,4,7,8,7,6,6,8,12,14,13,10],
+      vi:[0,0,0,5,10,15,18,20,18,10,4,0],
+      vv:[30,25,10,0,0,0,0,0,0,0,5,30]
+    };
+    const BF_UG={vacas:1.0,terneros:0.5,novillos:0.8,vaquillonas:0.7,toros:1.2};
+    const BF_KG_UG_DIA=9.5;
+    const BF_DIAS=[31,28,31,30,31,30,31,31,30,31,30,31];
+    const BF_MESES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    function calcForrajero(){
+      const cnHa=v("bf_cn"),prHa=v("bf_pr"),viHa=v("bf_vi"),vvHa=v("bf_vv");
+      const cnP=v("bf_cn_prod"),prP=v("bf_pr_prod"),viP=v("bf_vi_prod"),vvP=v("bf_vv_prod");
+      const cnA=v("bf_cn_apr")/100,prA=v("bf_pr_apr")/100,viA=0.70,vvA=0.60;
+      const totalUG=v("bf_vacas")*BF_UG.vacas+v("bf_terneros")*BF_UG.terneros
+        +v("bf_novillos")*BF_UG.novillos+v("bf_vaquillonas")*BF_UG.vaquillonas+v("bf_toros")*BF_UG.toros;
+      const supTotal=cnHa+prHa+viHa+vvHa;
+      const tbody=$("bf_table_body"); tbody.innerHTML="";
+      let totOf=0,totDem=0,deficit=0;
+      const ofArr=[],demArr=[];
+      for(let m=0;m<12;m++){
+        const of_cn=cnHa*cnP*(BF_DIST.cn[m]/100)*cnA;
+        const of_pr=prHa*prP*(BF_DIST.pr[m]/100)*prA;
+        const of_vi=viHa*viP*(BF_DIST.vi[m]/100)*viA;
+        const of_vv=vvHa*vvP*(BF_DIST.vv[m]/100)*vvA;
+        const oferta=of_cn+of_pr+of_vi+of_vv;
+        const demanda=totalUG*BF_KG_UG_DIA*BF_DIAS[m];
+        const bal=oferta-demanda;
+        totOf+=oferta; totDem+=demanda; if(bal<0) deficit++;
+        ofArr.push(oferta); demArr.push(demanda);
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${BF_MESES[m]}</td><td>${numUY.format(oferta)}</td><td>${numUY.format(demanda)}</td><td style="color:${bal>=0?'var(--primary-dark)':'#dc2626'};font-weight:700">${numUY.format(bal)}</td>`;
+        tbody.appendChild(tr);
+      }
+      $("r_bf_ug").textContent=numUY.format(totalUG);
+      $("r_bf_ugha").textContent=supTotal>0?numUY.format(totalUG/supTotal):"-";
+      $("r_bf_oferta").textContent=numUY.format(totOf);
+      $("r_bf_demanda").textContent=numUY.format(totDem);
+      $("r_bf_balance").textContent=numUY.format(totOf-totDem);
+      $("r_bf_balance").classList.toggle("negative",totOf-totDem<0);
+      $("r_bf_deficit").textContent=deficit>0?`${deficit} meses`:"Ninguno";
+      $("r_bf_deficit").classList.toggle("negative",deficit>0);
+      drawGroupedBarChart("bf_chart",BF_MESES,ofArr,demArr);
+    }
+    // Charts (canvas nativo, sin librerías)
+    function drawBarChart(canvasId, labels, values){
+      const c = $(canvasId), ctx = c.getContext("2d");
+      const w=c.width, h=c.height, pad=40;
+      ctx.clearRect(0,0,w,h);
+      const max = Math.max(...values,1), min = Math.min(...values,0), range = Math.max(max-min,1);
+      const y0 = h-pad - ((0-min)/range)*(h-pad*2);
+      // eje X
+      ctx.strokeStyle="#d1d5db"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pad,y0); ctx.lineTo(w-pad,y0); ctx.stroke();
+      const slot = (w-pad*2)/labels.length;
+      const barW = slot*0.58;
+      labels.forEach((lab,i)=>{
+        const x = pad + slot*i + (slot-barW)/2;
+        const yVal = h-pad - ((values[i]-min)/range)*(h-pad*2);
+        const top = Math.min(y0,yVal), bh = Math.abs(yVal-y0);
+        ctx.fillStyle = values[i] >= 0 ? "#1D9E75" : "#d9534f";
+        ctx.fillRect(x, top, barW, bh);
+        ctx.fillStyle="#374151"; ctx.font="12px Segoe UI"; ctx.textAlign="center";
+        ctx.fillText(lab.replace(" + ","+"), x+barW/2, h-10);
+      });
+    }
+    function drawLineChart(canvasId, labels, values){
+      const c = $(canvasId), ctx = c.getContext("2d");
+      const w=c.width, h=c.height, pad=45;
+      ctx.clearRect(0,0,w,h);
+      const max = Math.max(...values,1), min = Math.min(...values,0), range = Math.max(max-min,1);
+      // grilla simple
+      ctx.strokeStyle="#e5e7eb"; ctx.lineWidth=1;
+      for(let i=0;i<=4;i++){
+        const y = pad + (h-pad*2)*(i/4);
+        ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w-pad,y); ctx.stroke();
+      }
+      // línea
+      ctx.strokeStyle="#1D9E75"; ctx.lineWidth=2.5;
+      ctx.beginPath();
+      values.forEach((val,i)=>{
+        const x = pad + (w-pad*2)*(i/(values.length-1));
+        const y = h-pad - ((val-min)/range)*(h-pad*2);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      // puntos + etiquetas de meses
+      values.forEach((val,i)=>{
+        const x = pad + (w-pad*2)*(i/(values.length-1));
+        const y = h-pad - ((val-min)/range)*(h-pad*2);
+        ctx.fillStyle="#15785a";
+        ctx.beginPath(); ctx.arc(x,y,3.3,0,Math.PI*2); ctx.fill();
+        if(i%2===0 || i===values.length-1){
+          ctx.fillStyle="#374151"; ctx.font="11px Segoe UI"; ctx.textAlign="center";
+          ctx.fillText(labels[i], x, h-10);
+        }
+      });
+    }
+    function drawGroupedBarChart(canvasId,labels,s1,s2){
+      const c=$(canvasId),ctx=c.getContext("2d");
+      const w=c.width,h=c.height,pad=50;
+      ctx.clearRect(0,0,w,h);
+      const max=Math.max(...s1,...s2,1);
+      const slot=(w-pad*2)/labels.length, bw=slot*0.35;
+      ctx.strokeStyle="#e5e7eb";ctx.lineWidth=1;
+      for(let i=0;i<=4;i++){const y=pad+(h-pad*2)*(i/4);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();}
+      labels.forEach((lab,i)=>{
+        const x=pad+slot*i;
+        const y1=h-pad-((s1[i]/max)*(h-pad*2));
+        const y2=h-pad-((s2[i]/max)*(h-pad*2));
+        ctx.fillStyle="#1D9E75";ctx.fillRect(x+slot*0.08,y1,bw,h-pad-y1);
+        ctx.fillStyle="#e67e22";ctx.fillRect(x+slot*0.08+bw+2,y2,bw,h-pad-y2);
+        ctx.fillStyle="#374151";ctx.font="11px Segoe UI";ctx.textAlign="center";
+        ctx.fillText(lab,x+slot/2,h-8);
+      });
+      ctx.fillStyle="#1D9E75";ctx.fillRect(pad,6,12,12);
+      ctx.fillStyle="#374151";ctx.font="11px Segoe UI";ctx.textAlign="left";
+      ctx.fillText("Oferta",pad+16,16);
+      ctx.fillStyle="#e67e22";ctx.fillRect(pad+70,6,12,12);
+      ctx.fillStyle="#374151";ctx.fillText("Demanda",pad+86,16);
+    }
+    // LocalStorage
+    function saveState(){
+      const state = {};
+      allInputIds.forEach(id => state[id] = $(id).value);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    function loadState(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      try{
+        const state = JSON.parse(raw);
+        allInputIds.forEach(id => {
+          if(state[id] !== undefined) $(id).value = state[id];
+        });
+      }catch(e){}
+    }
+    // Export CSV (incluye flujo)
+    function exportCSV(h, g, f){
+      const rows = [
+        ["Modulo","Indicador","Valor"],
+        ["Horticultura","Produccion neta por ciclo (kg)",h.prodNeta],
+        ["Horticultura","Ingreso bruto por ciclo ($)",h.ingresoBruto],
+        ["Horticultura","Total costos por ciclo ($)",h.costosCiclo],
+        ["Horticultura","Resultado neto por ciclo ($)",h.netoCiclo],
+        ["Horticultura","Resultado neto anual ($)",h.netoAnual],
+        ["Horticultura","Periodo recupero (años)",h.payback ?? "No recuperable"],
+      ];
+      g.forEach(x=>{
+        rows.push(["Ganaderia",`Margen neto anual - ${x.sistema} ($)`,x.margenAnual]);
+        rows.push(["Ganaderia",`Margen neto por ha - ${x.sistema} ($/ha)`,x.margenHa]);
+      });
+      f.forEach(x=>{
+        rows.push(["Flujo",`Mes ${x.mes} - Ingresos`,x.ingresos]);
+        rows.push(["Flujo",`Mes ${x.mes} - Costos variables`,x.cvar]);
+        rows.push(["Flujo",`Mes ${x.mes} - Costos fijos`,x.cfijo]);
+        rows.push(["Flujo",`Mes ${x.mes} - Inversion`,x.inversion]);
+        rows.push(["Flujo",`Mes ${x.mes} - Saldo mensual`,x.saldoMensual]);
+        rows.push(["Flujo",`Mes ${x.mes} - Saldo acumulado`,x.acumulado]);
+      });
+      const csv = rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "agroanalitica_uy_resultados_v3.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    // Eventos
+    allInputIds.forEach(id=>{
+      $(id).addEventListener("input",()=>{
+        calcHorticultura();
+        calcGanaderia();
+        calcForrajero();
+        calcFlujo();
+        saveState();
+      });
+    });
+    $("btnCsv").addEventListener("click",()=>{
+      const h = calcHorticultura();
+      const g = calcGanaderia();
+      const f = calcFlujo();
+      exportCSV(h,g,f);
+    });
+    $("btnPdf").addEventListener("click",()=>window.print());
+    // Init
+    loadState();
+    calcHorticultura();
+    calcGanaderia();
+    calcForrajero();
+    calcFlujo();
+    // Fecha para el encabezado de impresión
+    $("print-date").textContent = "Informe generado el " + new Date().toLocaleDateString("es-UY",{year:"numeric",month:"long",day:"numeric"});
+  </script>
+</body>
+</html>
