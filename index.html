@@ -143,29 +143,70 @@
         <div class="result-card"><div class="name">Resultado neto anual ($)</div><div class="value" id="r_neto_anual">-</div></div>
         <div class="result-card"><div class="name">Período de recupero (años)</div><div class="value" id="r_payback">-</div></div>
       </div>
+      <!-- Renta y Financiamiento -->
+      <div class="block-title">Renta y financiamiento</div>
+      <div class="grid">
+        <div class="field"><label>Renta de la tierra ($/año, 0=propia)</label><input id="h_renta" type="number" min="0" value="0"></div>
+        <div class="field"><label>Tasa crédito anual (%)</label><input id="h_tasa" type="number" min="0" step="0.1" value="5.5"></div>
+        <div class="field"><label>% inversión financiada</label><input id="h_fin_pct" type="number" min="0" max="100" value="80"></div>
+      </div>
+      <!-- VAN/TIR cards -->
+      <div class="results">
+        <div class="result-card"><div class="name">VAN (10 años, 8%)</div><div class="value" id="r_h_van">-</div></div>
+        <div class="result-card"><div class="name">TIR</div><div class="value" id="r_h_tir">-</div></div>
+      </div>
+      <!-- Análisis Económico -->
+      <div class="block-title">Análisis Económico Anual</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concepto</th><th>$/ciclo</th><th>$/año</th></tr></thead>
+          <tbody id="h_eco_body"></tbody>
+        </table>
+      </div>
+      <!-- Sensibilidad -->
+      <div class="block-title">Análisis de Sensibilidad</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Escenario</th><th>Precio ($/kg)</th><th>Rendimiento (kg/m²)</th><th>Ingreso Bruto ($/año)</th><th>Costos ($/año)</th><th>Resultado Neto ($/año)</th></tr></thead>
+          <tbody id="h_sens_body"></tbody>
+        </table>
+      </div>
     </section>
     <section id="ganaderia" class="module">
       <h2>Ganadería</h2>
-      <p class="hint">Comparación orientativa de sistemas con margen anual y por há.</p>
-      <!-- Precios kg vivo: Pantalla Uruguay Remate 310 (25/03/2026)
-           Novillo 2-3 años USD 3,07/kg × TC 40,54 ≈ $124/kg
-           Ternero USD 4,10/kg × TC 40,54 ≈ $166/kg
-           Mano obra: ~1,5 peones rurales + cargas sociales (BPC 2026: $6.864, BPS)
-           Gastos fijos: contrib. inmobiliaria, seguros, mant., combustible -->
+      <p class="hint">Análisis económico por sistema. Datos calibrados con APEO/Tardaguila 2025-26, RING Plan Agropecuario.</p>
+      <div class="block-title">Parámetros generales</div>
       <div class="grid">
-        <div class="field"><label>Superficie (há)</label><input id="g_sup" type="number" min="0" value="300"></div>
+        <div class="field"><label>Superficie (ha)</label><input id="g_sup" type="number" min="0" value="300"></div>
         <div class="field"><label>Precio novillo ($/kg)</label><input id="g_p_novillo" type="number" min="0" step="0.01" value="124"></div>
         <div class="field"><label>Precio ternero ($/kg)</label><input id="g_p_ternero" type="number" min="0" step="0.01" value="166"></div>
-        <div class="field"><label>Mano de obra anual ($)</label><input id="g_mano_anual" type="number" min="0" value="1500000"></div>
-        <div class="field"><label>Gastos fijos anuales ($)</label><input id="g_gfijos" type="number" min="0" value="800000"></div>
       </div>
+      <div class="block-title">Costos desglosados ($/ha/año)</div>
+      <div class="grid">
+        <div class="field"><label>Sanidad</label><input id="g_sanidad" type="number" min="0" value="1200"></div>
+        <div class="field"><label>Suplementación</label><input id="g_suplem" type="number" min="0" value="1500"></div>
+        <div class="field"><label>Pasturas/verdeos</label><input id="g_pasturas" type="number" min="0" value="2000"></div>
+        <div class="field"><label>Mano de obra ($/ha/año)</label><input id="g_mano_ha" type="number" min="0" value="5000"></div>
+        <div class="field"><label>Gastos fijos ($/ha/año)</label><input id="g_gfijos_ha" type="number" min="0" value="2700"></div>
+      </div>
+      <div class="block-title">Renta e inversión</div>
+      <div class="grid">
+        <div class="field"><label>Renta/arrendamiento ($/ha/año, 0=propia)</label><input id="g_renta" type="number" min="0" value="0"></div>
+        <div class="field"><label>Inversión mejoras ($)</label><input id="g_inv" type="number" min="0" value="0"></div>
+        <div class="field"><label>Vida útil mejoras (años)</label><input id="g_inv_vida" type="number" min="1" value="10"></div>
+      </div>
+      <!-- Comparison table -->
+      <div class="block-title">Comparación por sistema</div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Sistema</th>
-              <th>Margen neto anual ($)</th>
-              <th>Margen neto por há ($/ha)</th>
+              <th>Prod. Bruto ($/ha)</th>
+              <th>Costos ($/ha)</th>
+              <th>Ingreso Capital ($/ha)</th>
+              <th>Ingreso Neto ($/ha)</th>
+              <th>Ingreso Neto total ($)</th>
             </tr>
           </thead>
           <tbody id="g_table_body"></tbody>
@@ -173,6 +214,22 @@
       </div>
       <div class="chart-wrap">
         <canvas id="g_chart" width="900" height="240"></canvas>
+      </div>
+      <!-- Análisis Económico detallado (mejor sistema) -->
+      <div class="block-title">Análisis Económico — Mejor Sistema</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concepto</th><th>$/ha/año</th><th>$ total/año</th></tr></thead>
+          <tbody id="g_eco_body"></tbody>
+        </table>
+      </div>
+      <!-- Sensibilidad -->
+      <div class="block-title">Análisis de Sensibilidad — Mejor Sistema</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Escenario</th><th>Precio Nov. ($/kg)</th><th>Precio Tern. ($/kg)</th><th>Prod. Bruto ($/ha)</th><th>Costos ($/ha)</th><th>Ingreso Neto ($/ha)</th></tr></thead>
+          <tbody id="g_sens_body"></tbody>
+        </table>
       </div>
     </section>
     <section id="forrajero" class="module">
@@ -392,10 +449,10 @@
          • TC: 1 USD ≈ 40,54 UYU — BCU/Infobae, 07/04/2026
          • BPC 2026: $6.864 — BPS (bps.gub.uy), enero 2026
        ═══════════════════════════════════════════════════════════════════ */
-    const STORAGE_KEY = "agroanalitica_uy_v6";
+    const STORAGE_KEY = "agroanalitica_uy_v7";
     const allInputIds = [
-      "h_sup","h_ciclos","h_rend","h_precio","h_perdidas","h_plantines","h_fert","h_mano","h_agua","h_otros","h_inv","h_vida",
-      "g_sup","g_p_novillo","g_p_ternero","g_mano_anual","g_gfijos",
+      "h_sup","h_ciclos","h_rend","h_precio","h_perdidas","h_plantines","h_fert","h_mano","h_agua","h_otros","h_inv","h_vida","h_renta","h_tasa","h_fin_pct",
+      "g_sup","g_p_novillo","g_p_ternero","g_sanidad","g_suplem","g_pasturas","g_mano_ha","g_gfijos_ha","g_renta","g_inv","g_inv_vida",
       "f_ingresos","f_cvar","f_cfijo","f_inversion","f_saldo_ini",
       "bf_cn","bf_pr","bf_vi","bf_vv","bf_cn_prod","bf_pr_prod","bf_vi_prod","bf_vv_prod",
       "bf_cn_apr","bf_pr_apr","bf_vacas","bf_terneros","bf_novillos","bf_vaquillonas","bf_toros",
@@ -416,6 +473,7 @@
       const superficie=v("h_sup"), ciclos=v("h_ciclos"), rendimiento=v("h_rend"), precio=v("h_precio"), perd=v("h_perdidas")/100;
       const plant=v("h_plantines"), fert=v("h_fert"), mano=v("h_mano"), agua=v("h_agua"), otros=v("h_otros");
       const inv=v("h_inv"), vida=Math.max(1,v("h_vida"));
+      const renta=v("h_renta"), tasa=v("h_tasa")/100, finPct=v("h_fin_pct")/100;
       const prodNeta = superficie*rendimiento*(1-perd);
       const ingresoBruto = prodNeta*precio;
       const costosCiclo = plant+fert+mano+agua+otros;
@@ -424,6 +482,10 @@
       const netoCiclo = ingresoBruto-costosCiclo-amortCiclo;
       const netoAnual = netoCiclo*ciclos;
       const payback = netoAnual>0 ? inv/netoAnual : null;
+      // Intereses
+      const interesAnual = inv * finPct * tasa;
+      // Ingreso neto formal
+      const ingresoNetoAnual = netoAnual - interesAnual - renta;
       $("r_prod_neta").textContent = numUY.format(prodNeta);
       $("r_ing_bruto").textContent = moneyUYU.format(ingresoBruto);
       $("r_costos").textContent = moneyUYU.format(costosCiclo);
@@ -432,37 +494,142 @@
       $("r_neto_anual").textContent = moneyUYU.format(netoAnual);
       $("r_neto_anual").classList.toggle("negative", netoAnual < 0);
       $("r_payback").textContent = payback ? `${numUY.format(payback)} años` : "No recuperable";
+      // VAN y TIR (10 años)
+      const flows = [-inv * (1 - finPct)];
+      for(let a = 1; a <= 10; a++){
+        const flujoAnual = ingresoBruto * ciclos - costosCiclo * ciclos - interesAnual - renta;
+        flows.push(flujoAnual);
+      }
+      let van = 0;
+      for(let t = 0; t < flows.length; t++) van += flows[t] / Math.pow(1.08, t);
+      $("r_h_van").textContent = moneyUYU.format(van);
+      $("r_h_van").classList.toggle("negative", van < 0);
+      // TIR
+      let r = 0.1;
+      for(let iter = 0; iter < 1000; iter++){
+        let npv = 0, dnpv = 0;
+        for(let t = 0; t < flows.length; t++){
+          npv += flows[t] / Math.pow(1 + r, t);
+          dnpv += -t * flows[t] / Math.pow(1 + r, t + 1);
+        }
+        if(Math.abs(dnpv) < 1e-12) break;
+        const newR = r - npv / dnpv;
+        if(Math.abs(newR - r) < 1e-8) { r = newR; break; }
+        r = newR;
+      }
+      if(isFinite(r) && r > -1 && r < 10){
+        $("r_h_tir").textContent = (r * 100).toFixed(1) + "%";
+        $("r_h_tir").classList.toggle("negative", r < 0);
+      } else {
+        $("r_h_tir").textContent = "N/A";
+      }
+      // Análisis Económico table
+      const ecoBody = $("h_eco_body");
+      ecoBody.innerHTML = "";
+      const costosAnual = costosCiclo * ciclos;
+      const ingresoAnual = ingresoBruto * ciclos;
+      const ecoRows = [
+        ["Producto Bruto", ingresoBruto, ingresoAnual],
+        ["(-) Costos efectivos", costosCiclo, costosAnual],
+        ["(-) Amortizaciones", amortCiclo, amortAnual],
+        ["= Ingreso de Capital", netoCiclo, netoAnual],
+        ["(-) Intereses crédito", ciclos > 0 ? interesAnual / ciclos : 0, interesAnual],
+        ["(-) Renta de la tierra", ciclos > 0 ? renta / ciclos : 0, renta],
+        ["= Ingreso Neto", ciclos > 0 ? ingresoNetoAnual / ciclos : 0, ingresoNetoAnual],
+      ];
+      ecoRows.forEach(([concepto, perCiclo, anual]) => {
+        const tr = document.createElement("tr");
+        const isBold = concepto.startsWith("=");
+        const display = isBold ? concepto.substring(2) : concepto;
+        tr.innerHTML = `<td style="${isBold ? 'font-weight:700;color:var(--primary-dark)' : ''}">${display}</td><td style="${isBold ? 'font-weight:700' : ''}">${moneyUYU.format(perCiclo)}</td><td style="${isBold ? 'font-weight:700' : ''}">${moneyUYU.format(anual)}</td>`;
+        ecoBody.appendChild(tr);
+      });
+      // Sensibilidad
+      const sensBody = $("h_sens_body");
+      sensBody.innerHTML = "";
+      [{nombre:"Mínimo",pM:0.70,rM:0.80},{nombre:"Más probable",pM:1.00,rM:1.00},{nombre:"Máximo",pM:1.20,rM:1.10}].forEach(sc => {
+        const scPrecio = precio * sc.pM;
+        const scRend = rendimiento * sc.rM;
+        const scProd = superficie * scRend * (1 - perd);
+        const scIngAnual = scProd * scPrecio * ciclos;
+        const scCostos = costosAnual + amortAnual + interesAnual + renta;
+        const scNeto = scIngAnual - scCostos;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td style="font-weight:700">${sc.nombre}</td><td>${fmtNum(scPrecio,2)}</td><td>${fmtNum(scRend,2)}</td><td>${moneyUYU.format(scIngAnual)}</td><td>${moneyUYU.format(scCostos)}</td><td style="font-weight:700;color:${scNeto >= 0 ? 'var(--primary-dark)' : '#dc2626'}">${moneyUYU.format(scNeto)}</td>`;
+        sensBody.appendChild(tr);
+      });
       return {prodNeta,ingresoBruto,costosCiclo,netoCiclo,netoAnual,payback};
     }
     // Ganadería
-    /* Sistemas ganaderos — kg/ha y costos variables calibrados para producir
-       márgenes consistentes con datos APEO/Tardaguila 2025-26:
-       - Cría: ~USD 130/ha neto (APEO proyección 2025/26)
-       - Recría praderas: ~USD 90/ha
-       - Recría campo natural: ~USD 55/ha
-       Producción carne ref.: 85-120 kg/ha (Revista Verde, RING Plan Agropecuario)
-       Carga promedio nacional: 0,84 UG/ha (RING marzo 2025, 376 productores) */
     const sistemas = [
-      {nombre:"Cría + suplementación",kgNovilloHa:45,kgTerneroHa:75,costoVarHa:5000},
-      {nombre:"Recría + praderas",kgNovilloHa:120,kgTerneroHa:45,costoVarHa:11000},
-      {nombre:"Recría campo natural",kgNovilloHa:85,kgTerneroHa:35,costoVarHa:6500}
+      {nombre:"Cría + suplementación",kgNovilloHa:45,kgTerneroHa:75},
+      {nombre:"Recría + praderas",kgNovilloHa:120,kgTerneroHa:45},
+      {nombre:"Recría campo natural",kgNovilloHa:85,kgTerneroHa:35}
     ];
     let lastGanaderia = [];
     function calcGanaderia(){
-      const ha=Math.max(0,v("g_sup")), pN=v("g_p_novillo"), pT=v("g_p_ternero"), mano=v("g_mano_anual"), gf=v("g_gfijos");
-      const estructuraHa = ha>0 ? (mano+gf)/ha : 0;
+      const ha=Math.max(1,v("g_sup")), pN=v("g_p_novillo"), pT=v("g_p_ternero");
+      const sanidad=v("g_sanidad"), suplem=v("g_suplem"), pasturas=v("g_pasturas");
+      const manoHa=v("g_mano_ha"), gfijosHa=v("g_gfijos_ha");
+      const renta=v("g_renta"), inv=v("g_inv"), invVida=Math.max(1,v("g_inv_vida"));
+      const costosVarHa = sanidad + suplem + pasturas;
+      const costosFijosHa = manoHa + gfijosHa;
+      const amortHa = inv / (invVida * ha);
+      const costosHa = costosVarHa + costosFijosHa + amortHa;
       const tbody=$("g_table_body");
       tbody.innerHTML="";
       lastGanaderia = sistemas.map(s=>{
-        const ingresoHa = s.kgNovilloHa*pN + s.kgTerneroHa*pT;
-        const margenHa = ingresoHa - s.costoVarHa - estructuraHa;
-        const margenAnual = margenHa*ha;
+        const pbHa = s.kgNovilloHa*pN + s.kgTerneroHa*pT;
+        const ikHa = pbHa - costosHa;
+        const inHa = ikHa - renta;
+        const inTotal = inHa * ha;
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${s.nombre}</td><td>${moneyUYU.format(margenAnual)}</td><td>${moneyUYU.format(margenHa)}</td>`;
+        tr.innerHTML=`<td>${s.nombre}</td><td>${moneyUYU.format(pbHa)}</td><td>${moneyUYU.format(costosHa)}</td><td style="font-weight:700;color:${ikHa>=0?'var(--primary-dark)':'#dc2626'}">${moneyUYU.format(ikHa)}</td><td style="font-weight:700;color:${inHa>=0?'var(--primary-dark)':'#dc2626'}">${moneyUYU.format(inHa)}</td><td>${moneyUYU.format(inTotal)}</td>`;
         tbody.appendChild(tr);
-        return {sistema:s.nombre,margenAnual,margenHa};
+        return {sistema:s.nombre,pbHa,costosHa,ikHa,inHa,inTotal};
       });
-      drawBarChart("g_chart", lastGanaderia.map(x=>x.sistema), lastGanaderia.map(x=>x.margenHa));
+      // Chart: Ingreso Neto por ha
+      drawBarChart("g_chart", lastGanaderia.map(x=>x.sistema), lastGanaderia.map(x=>x.inHa));
+      // Análisis Económico del mejor sistema
+      const best = lastGanaderia.reduce((a,b) => a.inHa > b.inHa ? a : b);
+      const ecoBody = $("g_eco_body");
+      ecoBody.innerHTML = "";
+      const ecoRows = [
+        ["Producto Bruto", best.pbHa, best.pbHa * ha],
+        ["(-) Sanidad", sanidad, sanidad * ha],
+        ["(-) Suplementación", suplem, suplem * ha],
+        ["(-) Pasturas/verdeos", pasturas, pasturas * ha],
+        ["(-) Mano de obra", manoHa, manoHa * ha],
+        ["(-) Gastos fijos", gfijosHa, gfijosHa * ha],
+        ["(-) Amortización mejoras", amortHa, amortHa * ha],
+        ["= Ingreso de Capital", best.ikHa, best.ikHa * ha],
+        ["(-) Renta de la tierra", renta, renta * ha],
+        ["= Ingreso Neto", best.inHa, best.inHa * ha],
+      ];
+      ecoRows.forEach(([concepto, perHa, total]) => {
+        const tr = document.createElement("tr");
+        const isBold = concepto.startsWith("=");
+        const display = isBold ? concepto.substring(2) : concepto;
+        tr.innerHTML = `<td style="${isBold?'font-weight:700;color:var(--primary-dark)':''}">${display}</td><td style="${isBold?'font-weight:700':''}">${moneyUYU.format(perHa)}</td><td style="${isBold?'font-weight:700':''}">${moneyUYU.format(total)}</td>`;
+        ecoBody.appendChild(tr);
+      });
+      // Sensibilidad (sobre mejor sistema)
+      const sensBody = $("g_sens_body");
+      sensBody.innerHTML = "";
+      [{nombre:"Mínimo",m:0.70},{nombre:"Más probable",m:1.00},{nombre:"Máximo",m:1.20}].forEach(sc => {
+        const scPN = pN * sc.m;
+        const scPT = pT * sc.m;
+        const scPB = sistemas.reduce((a,b) => {
+          const pbA = a.kgNovilloHa*scPN + a.kgTerneroHa*scPT;
+          const pbB = b.kgNovilloHa*scPN + b.kgTerneroHa*scPT;
+          return (pbA - costosHa - renta) > (pbB - costosHa - renta) ? a : b;
+        });
+        const scPBHa = scPB.kgNovilloHa*scPN + scPB.kgTerneroHa*scPT;
+        const scIN = scPBHa - costosHa - renta;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td style="font-weight:700">${sc.nombre}</td><td>${fmtNum(scPN,2)}</td><td>${fmtNum(scPT,2)}</td><td>${moneyUYU.format(scPBHa)}</td><td>${moneyUYU.format(costosHa)}</td><td style="font-weight:700;color:${scIN>=0?'var(--primary-dark)':'#dc2626'}">${moneyUYU.format(scIN)}</td>`;
+        sensBody.appendChild(tr);
+      });
       return lastGanaderia;
     }
     // Flujo de Fondos (12 meses)
