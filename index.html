@@ -14,7 +14,7 @@
     header{background:linear-gradient(120deg,var(--primary),var(--primary-dark));color:#fff;padding:1.4rem 1rem;text-align:center}
     header h1{margin:0;font-size:clamp(1.4rem,3vw,2rem)} header p{margin:.35rem 0 0;opacity:.95}
     nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
-    .nav-wrap{max-width:1100px;margin:0 auto;padding:.6rem;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem}
+    .nav-wrap{max-width:1100px;margin:0 auto;padding:.6rem;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5rem}
     .tab-btn{border:1px solid var(--border);background:#fff;padding:.65rem .5rem;border-radius:10px;cursor:pointer;font-weight:600}
     .tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
     main{max-width:1100px;margin:1rem auto;padding:0 .8rem 2rem}
@@ -96,6 +96,7 @@
       <button class="tab-btn" data-target="ganaderia">Ganadería</button>
       <button class="tab-btn" data-target="forrajero">Balance Forrajero</button>
       <button class="tab-btn" data-target="flujo">Flujo de Fondos</button>
+      <button class="tab-btn" data-target="viticultura">Viticultura</button>
     </div>
   </nav>
   <main>
@@ -267,6 +268,104 @@
         <canvas id="f_chart" width="900" height="240"></canvas>
       </div>
     </section>
+    <section id="viticultura" class="module">
+      <h2>Viticultura / Fruticultura</h2>
+      <p class="hint">Análisis económico de cultivos perennes. Valores por defecto: viñedo (UCU/Stagnari/Sánchez). Ajustá según tu cultivo.</p>
+
+      <!-- Block: Parámetros del cultivo -->
+      <div class="block-title">Parámetros del cultivo</div>
+      <div class="grid">
+        <div class="field"><label>Superficie (ha)</label><input id="vt_sup" type="number" min="0" value="10"></div>
+        <div class="field"><label>Años hasta primera producción</label><input id="vt_anos_impl" type="number" min="1" value="3"></div>
+        <div class="field"><label>Vida útil plantación (años)</label><input id="vt_vida_util" type="number" min="1" value="20"></div>
+      </div>
+
+      <!-- Block: Costos de implantación (US$/ha) -->
+      <div class="block-title">Costos de implantación (US$/ha)</div>
+      <div class="grid">
+        <div class="field"><label>Plantas</label><input id="vt_c_plantas" type="number" min="0" value="8000"></div>
+        <div class="field"><label>Estructura (postes/alambre)</label><input id="vt_c_estructura" type="number" min="0" value="10000"></div>
+        <div class="field"><label>Mano de obra implantación</label><input id="vt_c_mo_impl" type="number" min="0" value="6000"></div>
+        <div class="field"><label>Fertilización inicial</label><input id="vt_c_fert_ini" type="number" min="0" value="2000"></div>
+        <div class="field"><label>Otros implantación</label><input id="vt_c_otros_impl" type="number" min="0" value="2600"></div>
+      </div>
+
+      <!-- Block: Costos anuales (US$/ha/año) -->
+      <div class="block-title">Costos anuales (US$/ha/año)</div>
+      <div class="grid">
+        <div class="field"><label>Costo anual durante implantación</label><input id="vt_costo_impl_anual" type="number" min="0" value="3000"></div>
+        <div class="field"><label>Costo anual plantación adulta</label><input id="vt_costo_adulta" type="number" min="0" value="6000"></div>
+        <div class="field"><label>Amortización no efectiva (US$/ha/año)</label><input id="vt_amort" type="number" min="0" value="1430"></div>
+      </div>
+
+      <!-- Block: Producción y precio -->
+      <div class="block-title">Producción y precio</div>
+      <div class="grid">
+        <div class="field"><label>Producción adulta (kg/ha)</label><input id="vt_prod" type="number" min="0" value="18000"></div>
+        <div class="field"><label>Precio de venta (US$/kg)</label><input id="vt_precio" type="number" min="0" step="0.01" value="0.50"></div>
+        <div class="field"><label>Renta de la tierra (US$/ha/año, 0=propia)</label><input id="vt_renta" type="number" min="0" value="0"></div>
+      </div>
+
+      <!-- Block: Financiamiento BROU -->
+      <div class="block-title">Financiamiento BROU</div>
+      <div class="grid">
+        <div class="field"><label>% financiado</label><input id="vt_fin_pct" type="number" min="0" max="100" value="80"></div>
+        <div class="field"><label>Tasa interés anual (%)</label><input id="vt_fin_tasa" type="number" min="0" step="0.1" value="5.5"></div>
+        <div class="field"><label>Años de gracia</label><input id="vt_fin_gracia" type="number" min="0" value="3"></div>
+        <div class="field"><label>Plazo total (años)</label><input id="vt_fin_plazo" type="number" min="1" value="10"></div>
+      </div>
+
+      <!-- Results cards -->
+      <div class="results" id="vt_results">
+        <div class="result-card"><div class="name">Inversión total implantación (US$)</div><div class="value" id="r_vt_inv_total">-</div></div>
+        <div class="result-card"><div class="name">Producto Bruto anual adulta (US$)</div><div class="value" id="r_vt_pb">-</div></div>
+        <div class="result-card"><div class="name">Insumos totales adulta (US$/año)</div><div class="value" id="r_vt_insumos">-</div></div>
+        <div class="result-card"><div class="name">Ingreso de Capital (US$/año)</div><div class="value" id="r_vt_ik">-</div></div>
+        <div class="result-card"><div class="name">Ingreso Neto (US$/año)</div><div class="value" id="r_vt_in">-</div></div>
+        <div class="result-card"><div class="name">VAN (10 años, 8%)</div><div class="value" id="r_vt_van">-</div></div>
+        <div class="result-card"><div class="name">TIR</div><div class="value" id="r_vt_tir">-</div></div>
+        <div class="result-card"><div class="name">TIRM (reinversión 5%)</div><div class="value" id="r_vt_tirm">-</div></div>
+      </div>
+
+      <!-- Análisis Económico table -->
+      <div class="block-title">Análisis Económico — Plantación Adulta</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concepto</th><th>US$/ha/año</th><th>US$ total/año</th></tr></thead>
+          <tbody id="vt_eco_body"></tbody>
+        </table>
+      </div>
+
+      <!-- Flujo de fondos 10 años -->
+      <div class="block-title">Flujo de Fondos (10 años)</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Año</th><th>Ingresos (US$)</th><th>Costos (US$)</th><th>Cuota crédito (US$)</th><th>Flujo neto (US$)</th><th>Flujo acumulado (US$)</th></tr></thead>
+          <tbody id="vt_flujo_body"></tbody>
+        </table>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="vt_flujo_chart" width="900" height="240"></canvas>
+      </div>
+
+      <!-- Sensibilidad -->
+      <div class="block-title">Análisis de Sensibilidad</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Escenario</th><th>Precio (US$/kg)</th><th>Producción (kg/ha)</th><th>Producto Bruto (US$)</th><th>Insumos (US$)</th><th>Ingreso Capital (US$)</th><th>Ingreso Neto (US$)</th></tr></thead>
+          <tbody id="vt_sens_body"></tbody>
+        </table>
+      </div>
+
+      <!-- Tabla crédito BROU -->
+      <div class="block-title">Proyección Crédito BROU</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Año</th><th>Saldo inicial (US$)</th><th>Interés (US$)</th><th>Amortización (US$)</th><th>Cuota (US$)</th><th>Saldo final (US$)</th></tr></thead>
+          <tbody id="vt_cred_body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
   <footer>Proyecto UCU – Ingeniería Agronómica 2026 · AgroAnalítica UY – Herramienta de apoyo para análisis económico agropecuario</footer>
   <script>
@@ -293,13 +392,14 @@
          • TC: 1 USD ≈ 40,54 UYU — BCU/Infobae, 07/04/2026
          • BPC 2026: $6.864 — BPS (bps.gub.uy), enero 2026
        ═══════════════════════════════════════════════════════════════════ */
-    const STORAGE_KEY = "agroanalitica_uy_v5";
+    const STORAGE_KEY = "agroanalitica_uy_v6";
     const allInputIds = [
       "h_sup","h_ciclos","h_rend","h_precio","h_perdidas","h_plantines","h_fert","h_mano","h_agua","h_otros","h_inv","h_vida",
       "g_sup","g_p_novillo","g_p_ternero","g_mano_anual","g_gfijos",
       "f_ingresos","f_cvar","f_cfijo","f_inversion","f_saldo_ini",
       "bf_cn","bf_pr","bf_vi","bf_vv","bf_cn_prod","bf_pr_prod","bf_vi_prod","bf_vv_prod",
-      "bf_cn_apr","bf_pr_apr","bf_vacas","bf_terneros","bf_novillos","bf_vaquillonas","bf_toros"
+      "bf_cn_apr","bf_pr_apr","bf_vacas","bf_terneros","bf_novillos","bf_vaquillonas","bf_toros",
+      "vt_sup","vt_anos_impl","vt_vida_util","vt_c_plantas","vt_c_estructura","vt_c_mo_impl","vt_c_fert_ini","vt_c_otros_impl","vt_costo_impl_anual","vt_costo_adulta","vt_amort","vt_prod","vt_precio","vt_renta","vt_fin_pct","vt_fin_tasa","vt_fin_gracia","vt_fin_plazo"
     ];
     function v(id){ const n = parseFloat($(id).value); return Number.isFinite(n)?n:0; }
     // Tabs
@@ -454,6 +554,221 @@
       $("r_bf_deficit").classList.toggle("negative",deficit>0);
       drawGroupedBarChart("bf_chart",BF_MESES,ofArr,demArr);
     }
+    // Viticultura / Fruticultura
+    function calcViticultura(){
+      // Read inputs
+      const sup = v("vt_sup");
+      const anosImpl = Math.max(1, v("vt_anos_impl"));
+      const vidaUtil = Math.max(1, v("vt_vida_util"));
+      const cPlantas = v("vt_c_plantas");
+      const cEstructura = v("vt_c_estructura");
+      const cMoImpl = v("vt_c_mo_impl");
+      const cFertIni = v("vt_c_fert_ini");
+      const cOtrosImpl = v("vt_c_otros_impl");
+      const costoImplAnual = v("vt_costo_impl_anual");
+      const costoAdulta = v("vt_costo_adulta");
+      const amortNoEfectiva = v("vt_amort");
+      const produccion = v("vt_prod");
+      const precio = v("vt_precio");
+      const renta = v("vt_renta");
+      const finPct = v("vt_fin_pct") / 100;
+      const finTasa = v("vt_fin_tasa") / 100;
+      const finGracia = v("vt_fin_gracia");
+      const finPlazo = Math.max(1, v("vt_fin_plazo"));
+
+      // Implantation cost per ha
+      const implantacionHa = cPlantas + cEstructura + cMoImpl + cFertIni + cOtrosImpl;
+      const invTotal = implantacionHa * sup;
+
+      // Adult year economics (per ha)
+      const productoBrutoHa = produccion * precio;
+      const insumosEfectivosHa = costoAdulta;
+      const insumosHa = insumosEfectivosHa + amortNoEfectiva;
+      const ingresoCapitalHa = productoBrutoHa - insumosHa;
+
+      // Credit calculation
+      const montoCredito = invTotal * finPct;
+      const anosAmort = finPlazo - finGracia;
+
+      // Build credit schedule
+      const creditSchedule = [];
+      let saldoCredito = montoCredito;
+      for(let a = 1; a <= finPlazo; a++){
+        const interes = saldoCredito * finTasa;
+        let amortizacion = 0;
+        if(a > finGracia && anosAmort > 0){
+          amortizacion = montoCredito / anosAmort;
+        }
+        const cuota = interes + amortizacion;
+        saldoCredito = Math.max(0, saldoCredito - amortizacion);
+        creditSchedule.push({ ano: a, saldoIni: saldoCredito + amortizacion, interes, amortizacion, cuota, saldoFin: saldoCredito });
+      }
+
+      // Interest for adult years
+      const interesAnualAdulta = creditSchedule.length > anosImpl ? creditSchedule[anosImpl].interes : 0;
+
+      const ingresoNetoHa = ingresoCapitalHa - interesAnualAdulta / Math.max(1, sup) - renta;
+
+      // Totals
+      const productoBrutoTotal = productoBrutoHa * sup;
+      const insumosTotal = insumosHa * sup;
+      const ingresoCapitalTotal = ingresoCapitalHa * sup;
+      const ingresoNetoTotal = ingresoNetoHa * sup;
+
+      // Update result cards
+      $("r_vt_inv_total").textContent = "US$ " + fmtNum(invTotal);
+      $("r_vt_pb").textContent = "US$ " + fmtNum(productoBrutoTotal);
+      $("r_vt_insumos").textContent = "US$ " + fmtNum(insumosTotal);
+      $("r_vt_ik").textContent = "US$ " + fmtNum(ingresoCapitalTotal);
+      $("r_vt_ik").classList.toggle("negative", ingresoCapitalTotal < 0);
+      $("r_vt_in").textContent = "US$ " + fmtNum(ingresoNetoTotal);
+      $("r_vt_in").classList.toggle("negative", ingresoNetoTotal < 0);
+
+      // Economic analysis table (adult year)
+      const ecoBody = $("vt_eco_body");
+      ecoBody.innerHTML = "";
+      const ecoRows = [
+        ["Producto Bruto (producción × precio)", productoBrutoHa, productoBrutoTotal],
+        ["(-) Costos efectivos", costoAdulta, costoAdulta * sup],
+        ["(-) Amortizaciones", amortNoEfectiva, amortNoEfectiva * sup],
+        ["= Ingreso de Capital", ingresoCapitalHa, ingresoCapitalTotal],
+        ["(-) Intereses crédito BROU", interesAnualAdulta / Math.max(1, sup), interesAnualAdulta],
+        ["(-) Renta de la tierra", renta, renta * sup],
+        ["= Ingreso Neto", ingresoNetoHa, ingresoNetoTotal],
+      ];
+      ecoRows.forEach(([concepto, perHa, total]) => {
+        const tr = document.createElement("tr");
+        const isBold = concepto.startsWith("=");
+        const displayConcepto = isBold ? concepto.substring(2) : concepto;
+        tr.innerHTML = `<td style="${isBold ? 'font-weight:700;color:var(--primary-dark)' : ''}">${displayConcepto}</td><td style="${isBold ? 'font-weight:700' : ''}">${fmtNum(perHa)}</td><td style="${isBold ? 'font-weight:700' : ''}">${fmtNum(total)}</td>`;
+        ecoBody.appendChild(tr);
+      });
+
+      // Cash flow 10 years
+      const flujoBody = $("vt_flujo_body");
+      flujoBody.innerHTML = "";
+      const flows = []; // net cash flows for VAN/TIR
+      let acumulado = 0;
+      const flujoLabels = [];
+      const flujoValues = [];
+
+      // Year 0: initial investment (equity portion)
+      const equityInv = invTotal * (1 - finPct);
+      flows.push(-equityInv);
+
+      for(let a = 1; a <= finPlazo; a++){
+        let ingresos = 0;
+        let costos = 0;
+
+        if(a <= anosImpl){
+          // Implantation years: no production
+          ingresos = 0;
+          costos = costoImplAnual * sup;
+        } else {
+          // Production years
+          ingresos = productoBrutoTotal;
+          costos = costoAdulta * sup;
+        }
+
+        const cuotaCredito = creditSchedule[a-1] ? creditSchedule[a-1].cuota : 0;
+        const rentaAnual = renta * sup;
+        const flujoNeto = ingresos - costos - cuotaCredito - rentaAnual;
+        acumulado += flujoNeto;
+        flows.push(flujoNeto);
+
+        flujoLabels.push("A" + a);
+        flujoValues.push(acumulado);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${a}</td><td>${fmtNum(ingresos)}</td><td>${fmtNum(costos)}</td><td>${fmtNum(cuotaCredito)}</td><td style="color:${flujoNeto >= 0 ? 'var(--primary-dark)' : '#dc2626'};font-weight:700">${fmtNum(flujoNeto)}</td><td style="color:${acumulado >= 0 ? 'var(--primary-dark)' : '#dc2626'};font-weight:700">${fmtNum(acumulado)}</td>`;
+        flujoBody.appendChild(tr);
+      }
+
+      // Draw cash flow chart
+      drawLineChart("vt_flujo_chart", flujoLabels, flujoValues);
+
+      // VAN calculation (discount rate 8%)
+      const discountRate = 0.08;
+      let van = 0;
+      for(let t = 0; t < flows.length; t++){
+        van += flows[t] / Math.pow(1 + discountRate, t);
+      }
+      $("r_vt_van").textContent = "US$ " + fmtNum(van);
+      $("r_vt_van").classList.toggle("negative", van < 0);
+
+      // TIR calculation (Newton-Raphson)
+      function calcTIR(cashflows){
+        let r = 0.1;
+        for(let iter = 0; iter < 1000; iter++){
+          let npv = 0, dnpv = 0;
+          for(let t = 0; t < cashflows.length; t++){
+            npv += cashflows[t] / Math.pow(1 + r, t);
+            dnpv += -t * cashflows[t] / Math.pow(1 + r, t + 1);
+          }
+          if(Math.abs(dnpv) < 1e-12) break;
+          const newR = r - npv / dnpv;
+          if(Math.abs(newR - r) < 1e-8) { r = newR; break; }
+          r = newR;
+        }
+        return r;
+      }
+
+      const tir = calcTIR(flows);
+      if(isFinite(tir) && tir > -1 && tir < 10){
+        $("r_vt_tir").textContent = (tir * 100).toFixed(1) + "%";
+        $("r_vt_tir").classList.toggle("negative", tir < 0);
+      } else {
+        $("r_vt_tir").textContent = "N/A";
+      }
+
+      // TIRM calculation (MIRR)
+      const reinvRate = 0.05;
+      const n = flows.length - 1;
+      let pvNeg = 0, fvPos = 0;
+      for(let t = 0; t < flows.length; t++){
+        if(flows[t] < 0){
+          pvNeg += flows[t] / Math.pow(1 + finTasa, t);
+        } else {
+          fvPos += flows[t] * Math.pow(1 + reinvRate, n - t);
+        }
+      }
+      const tirm = pvNeg < 0 ? Math.pow(fvPos / Math.abs(pvNeg), 1 / n) - 1 : 0;
+      if(isFinite(tirm) && tirm > -1 && tirm < 10){
+        $("r_vt_tirm").textContent = (tirm * 100).toFixed(1) + "%";
+        $("r_vt_tirm").classList.toggle("negative", tirm < 0);
+      } else {
+        $("r_vt_tirm").textContent = "N/A";
+      }
+
+      // Sensitivity analysis table
+      const sensBody = $("vt_sens_body");
+      sensBody.innerHTML = "";
+      const scenarios = [
+        { nombre: "Mínimo", precioMult: 0.70, prodMult: 0.80 },
+        { nombre: "Más probable", precioMult: 1.00, prodMult: 1.00 },
+        { nombre: "Máximo", precioMult: 1.20, prodMult: 1.10 },
+      ];
+      scenarios.forEach(sc => {
+        const scPrecio = precio * sc.precioMult;
+        const scProd = produccion * sc.prodMult;
+        const scPB = scPrecio * scProd * sup;
+        const scInsumos = insumosTotal;
+        const scIK = scPB - scInsumos;
+        const scIN = scIK - interesAnualAdulta - renta * sup;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td style="font-weight:700">${sc.nombre}</td><td>${scPrecio.toFixed(2)}</td><td>${fmtNum(scProd)}</td><td>${fmtNum(scPB)}</td><td>${fmtNum(scInsumos)}</td><td style="font-weight:700;color:${scIK >= 0 ? 'var(--primary-dark)' : '#dc2626'}">${fmtNum(scIK)}</td><td style="font-weight:700;color:${scIN >= 0 ? 'var(--primary-dark)' : '#dc2626'}">${fmtNum(scIN)}</td>`;
+        sensBody.appendChild(tr);
+      });
+
+      // Credit schedule table
+      const credBody = $("vt_cred_body");
+      credBody.innerHTML = "";
+      creditSchedule.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${c.ano}</td><td>${fmtNum(c.saldoIni)}</td><td>${fmtNum(c.interes)}</td><td>${fmtNum(c.amortizacion)}</td><td style="font-weight:700">${fmtNum(c.cuota)}</td><td>${fmtNum(c.saldoFin)}</td>`;
+        credBody.appendChild(tr);
+      });
+    }
     // Charts (canvas nativo, sin librerías)
     function drawBarChart(canvasId, labels, values){
       const c = $(canvasId), ctx = c.getContext("2d");
@@ -585,6 +900,7 @@
         calcGanaderia();
         calcForrajero();
         calcFlujo();
+        calcViticultura();
         saveState();
       });
     });
@@ -601,6 +917,7 @@
     calcGanaderia();
     calcForrajero();
     calcFlujo();
+    calcViticultura();
     // Fecha para el encabezado de impresión
     $("print-date").textContent = "Informe generado el " + new Date().toLocaleDateString("es-UY",{year:"numeric",month:"long",day:"numeric"});
   </script>
