@@ -81,9 +81,10 @@
   </style>
 </head>
 <body>
-  <header>
+  <header style="position:relative">
     <h1>AgroAnalítica UY</h1>
     <p>Análisis económico para el agro uruguayo</p>
+    <a href="dashboard.html" style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;padding:.5rem .9rem;border-radius:10px;font-weight:600;font-size:.9rem;border:1px solid rgba(255,255,255,.35)">🧭 Centro de Decisiones</a>
   </header>
   <div class="print-header">
     <h1>AgroAnalítica UY</h1>
@@ -250,6 +251,33 @@
         <div class="field"><label>Verdeo invierno</label><input id="bf_vi" type="number" min="0" value="25"></div>
         <div class="field"><label>Verdeo verano</label><input id="bf_vv" type="number" min="0" value="15"></div>
       </div>
+      <!-- BLOQUE NDVI OneSoil -->
+<div class="block-title">📡 NDVI desde OneSoil (opcional)</div>
+<p class="hint" style="margin-top:-8px;margin-bottom:12px;">
+  Consultá el NDVI de cada potrero en 
+  <a href="https://app.onesoil.ai" target="_blank" style="color:var(--primary-dark);font-weight:600;">app.onesoil.ai</a>
+  e ingresalo acá. El sistema ajustará automáticamente la producción estimada.
+  Dejá en 0 para usar los valores por defecto.
+</p>
+<div class="grid">
+  <div class="field">
+    <label>NDVI campo natural <span style="font-size:11px;color:#888">(0 a 1)</span></label>
+    <input id="bf_ndvi_cn" type="number" min="0" max="1" step="0.01" value="0" placeholder="ej: 0.55">
+  </div>
+  <div class="field">
+    <label>NDVI pradera <span style="font-size:11px;color:#888">(0 a 1)</span></label>
+    <input id="bf_ndvi_pr" type="number" min="0" max="1" step="0.01" value="0" placeholder="ej: 0.65">
+  </div>
+  <div class="field">
+    <label>NDVI verdeo invierno <span style="font-size:11px;color:#888">(0 a 1)</span></label>
+    <input id="bf_ndvi_vi" type="number" min="0" max="1" step="0.01" value="0" placeholder="ej: 0.60">
+  </div>
+  <div class="field">
+    <label>NDVI verdeo verano <span style="font-size:11px;color:#888">(0 a 1)</span></label>
+    <input id="bf_ndvi_vv" type="number" min="0" max="1" step="0.01" value="0" placeholder="ej: 0.70">
+  </div>
+</div>
+<div id="bf_ndvi_semaforo" style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 20px 0;"></div>
       <div class="block-title">Producción forrajera (kg MS/ha/año) y aprovechamiento</div>
       <div class="grid">
         <div class="field"><label>Prod. campo natural</label><input id="bf_cn_prod" type="number" min="0" value="3500"></div>

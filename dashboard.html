@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroAnalítica UY — Centro de Decisiones</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde:#1a7a52; --verde-claro:#2db87a; --verde-oscuro:#0d4a31;
+  --tierra:#c4843a; --tierra-claro:#f0b87a; --tierra-oscuro:#8a5520;
+  --crema:#faf7f2; --blanco:#ffffff;
+  --gris:#64748b; --gris-claro:#f1f5f9; --borde:#e2e8f0;
+  --rojo:#dc2626; --amarillo:#d97706; --azul:#2563eb;
+  --sombra: 0 4px 24px rgba(0,0,0,0.08);
+  --radio:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--crema);color:#1e293b;min-height:100vh}
+
+/* ── HEADER ── */
+header {
+  background:linear-gradient(135deg,var(--verde-oscuro) 0%,var(--verde) 60%,var(--verde-claro) 100%);
+  padding:1.2rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 20px rgba(0,0,0,0.15);
+}
+.logo{display:flex;align-items:center;gap:.8rem}
+.logo-icon{width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.logo-text h1{font-family:'Fraunces',serif;color:#fff;font-size:1.25rem;font-weight:700;letter-spacing:-.3px}
+.logo-text p{color:rgba(255,255,255,0.75);font-size:.78rem;margin-top:1px}
+.btn-asesor{
+  background:var(--tierra);color:#fff;border:none;
+  padding:.65rem 1.3rem;border-radius:12px;font-weight:600;font-size:.88rem;
+  cursor:pointer;display:flex;align-items:center;gap:.5rem;
+  transition:all .2s;box-shadow:0 2px 8px rgba(196,132,58,0.4);
+  font-family:'DM Sans',sans-serif;
+}
+.btn-asesor:hover{background:var(--tierra-oscuro);transform:translateY(-1px);box-shadow:0 4px 16px rgba(196,132,58,0.5)}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(135deg,var(--verde-oscuro),var(--verde));
+  padding:2rem 2rem 3.5rem;text-align:center;color:#fff;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero h2{font-family:'Fraunces',serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;margin-bottom:.5rem;position:relative}
+.hero p{opacity:.85;font-size:1rem;position:relative}
+
+/* ── TABS NAV ── */
+.tabs-wrap{background:#fff;border-bottom:2px solid var(--borde);position:sticky;top:68px;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.tabs{max-width:1100px;margin:0 auto;display:flex;gap:.25rem;padding:.5rem 1.5rem;overflow-x:auto}
+.tab{border:none;background:none;padding:.6rem 1.1rem;border-radius:10px;font-weight:600;font-size:.88rem;cursor:pointer;color:var(--gris);transition:all .2s;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.tab.active{background:var(--verde);color:#fff}
+.tab:hover:not(.active){background:var(--gris-claro);color:var(--verde-oscuro)}
+
+/* ── MAIN ── */
+main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);padding:1.5rem;border:1px solid var(--borde);margin-bottom:1.5rem}
+.card-title{font-family:'Fraunces',serif;font-size:1.2rem;color:var(--verde-oscuro);margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+.card-desc{color:var(--gris);font-size:.88rem;margin-bottom:1.25rem;line-height:1.5}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── CAMPOS ── */
+.campo{display:flex;flex-direction:column;gap:.3rem}
+.campo label{font-size:.82rem;font-weight:600;color:#374151}
+.campo .ayuda{font-size:.75rem;color:var(--gris);font-style:italic;line-height:1.4}
+.campo input,.campo select{
+  border:1.5px solid var(--borde);border-radius:10px;
+  padding:.55rem .7rem;font-size:.92rem;font-family:'DM Sans',sans-serif;
+  transition:border-color .2s;background:#fff;
+}
+.campo input:focus,.campo select:focus{outline:none;border-color:var(--verde-claro)}
+
+/* ── RESULTADOS ── */
+.resultados{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-top:1.25rem}
+.res-card{border-radius:12px;padding:1rem 1.1rem;border:1.5px solid var(--borde)}
+.res-card .res-label{font-size:.78rem;color:var(--gris);margin-bottom:.2rem}
+.res-card .res-val{font-family:'Fraunces',serif;font-size:1.45rem;font-weight:700;color:var(--verde-oscuro)}
+.res-card .res-ayuda{font-size:.73rem;color:var(--gris);margin-top:.2rem;line-height:1.4}
+.res-card.positivo{border-color:#bbf7d0;background:#f0fdf4}
+.res-card.negativo{border-color:#fecaca;background:#fef2f2}.res-card.negativo .res-val{color:var(--rojo)}
+.res-card.neutro{border-color:#bfdbfe;background:#eff6ff}.res-card.neutro .res-val{color:var(--azul)}
+.res-card.tierra{border-color:var(--tierra-claro);background:#fff8f0}.res-card.tierra .res-val{color:var(--tierra-oscuro)}
+
+/* ── RECOMENDACION ── */
+.recomendacion{margin-top:1.25rem;padding:1rem 1.2rem;border-radius:12px;font-size:.88rem;line-height:1.6;display:none}
+.recomendacion.show{display:block}
+.recomendacion.verde{background:#f0fdf4;border-left:4px solid var(--verde-claro);color:#166534}
+.recomendacion.amarillo{background:#fffbeb;border-left:4px solid var(--amarillo);color:#92400e}
+.recomendacion.rojo{background:#fef2f2;border-left:4px solid var(--rojo);color:#991b1b}
+
+/* ── BTN CALCULAR ── */
+.btn-calc{
+  background:var(--verde);color:#fff;border:none;
+  padding:.75rem 1.8rem;border-radius:12px;font-weight:700;font-size:.95rem;
+  cursor:pointer;transition:all .2s;margin-top:1rem;
+  font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:.5rem;
+}
+.btn-calc:hover{background:var(--verde-oscuro);transform:translateY(-1px)}
+
+/* ── SEPARADOR ── */
+.sep{height:1px;background:var(--borde);margin:1.25rem 0}
+
+/* ── PANEL ASESOR ── */
+#panel-asesor{
+  position:fixed;top:0;right:-420px;width:400px;height:100vh;
+  background:#fff;box-shadow:-4px 0 30px rgba(0,0,0,0.12);
+  z-index:200;transition:right .35s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+#panel-asesor.open{right:0}
+.asesor-header{
+  background:linear-gradient(135deg,var(--verde-oscuro),var(--verde));
+  padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:flex-start;
+}
+.asesor-header h3{font-family:'Fraunces',serif;color:#fff;font-size:1.1rem}
+.asesor-header p{color:rgba(255,255,255,.75);font-size:.8rem;margin-top:.2rem}
+.btn-cerrar{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.asesor-msgs{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.msg{padding:.85rem 1rem;border-radius:12px;font-size:.88rem;line-height:1.6;max-width:88%}
+.msg.bot{background:var(--gris-claro);color:#1e293b;align-self:flex-start}
+.msg.user{background:var(--verde);color:#fff;align-self:flex-end;text-align:right}
+.msg.loading{background:var(--gris-claro);color:var(--gris);font-style:italic}
+.asesor-input{padding:1rem 1.25rem;border-top:1px solid var(--borde);display:flex;gap:.5rem}
+.asesor-input input{flex:1;border:1.5px solid var(--borde);border-radius:10px;padding:.6rem .8rem;font-size:.88rem;font-family:'DM Sans',sans-serif}
+.asesor-input input:focus{outline:none;border-color:var(--verde-claro)}
+.btn-enviar{background:var(--verde);color:#fff;border:none;border-radius:10px;padding:.6rem 1rem;cursor:pointer;font-weight:600;font-size:.88rem;font-family:'DM Sans',sans-serif}
+
+/* ── OVERLAY ── */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199;display:none}
+#overlay.show{display:block}
+
+/* ── SEMAFORO ── */
+.semaforo{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:20px;font-size:.8rem;font-weight:600}
+.semaforo.verde-s{background:#dcfce7;color:#166534}
+.semaforo.amarillo-s{background:#fef9c3;color:#854d0e}
+.semaforo.rojo-s{background:#fee2e2;color:#991b1b}
+
+/* ── GRAFICO SIMPLE ── */
+.barra-wrap{margin-top:1rem}
+.barra-label{font-size:.8rem;color:var(--gris);margin-bottom:.3rem;display:flex;justify-content:space-between}
+.barra-bg{background:var(--gris-claro);border-radius:8px;height:14px;overflow:hidden}
+.barra-fill{height:100%;border-radius:8px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.barra-fill.verde-b{background:linear-gradient(90deg,var(--verde-claro),var(--verde-oscuro))}
+.barra-fill.rojo-b{background:linear-gradient(90deg,#f87171,var(--rojo))}
+.barra-fill.tierra-b{background:linear-gradient(90deg,var(--tierra-claro),var(--tierra))}
+
+/* ── TABLA COMPARACION ── */
+.tabla-comp{width:100%;border-collapse:collapse;margin-top:1rem}
+.tabla-comp th{background:var(--verde-oscuro);color:#fff;padding:.65rem .8rem;font-size:.82rem;text-align:left}
+.tabla-comp td{padding:.6rem .8rem;border-bottom:1px solid var(--borde);font-size:.88rem}
+.tabla-comp tr:hover td{background:#f8fafc}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.73rem;font-weight:700}
+.badge-nuevo{background:#dbeafe;color:#1e40af}
+.badge-pro{background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌿</div>
+    <div class="logo-text">
+      <h1>AgroAnalítica UY</h1>
+      <p>Centro de Decisiones Agropecuarias</p>
+    </div>
+  </div>
+  <button class="btn-asesor" onclick="abrirAsesor()">
+    🤖 Consultá al asesor IA
+  </button>
+</header>
+
+<div class="hero">
+  <h2>¿Cuánto necesito vender para ganar plata?</h2>
+  <p>Calculadoras para tomar mejores decisiones en tu emprendimiento agropecuario</p>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('equilibrio',this)">⚖️ Punto de equilibrio</button>
+    <button class="tab" onclick="switchTab('margen',this)">📊 Margen y rentabilidad</button>
+    <button class="tab" onclick="switchTab('simulador',this)">🔮 Simulador de escenarios</button>
+    <button class="tab" onclick="switchTab('precio',this)">💲 Calculadora de precio</button>
+    <button class="tab" onclick="switchTab('flujo',this)">💧 Flujo de caja</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════
+     PANEL 1: PUNTO DE EQUILIBRIO
+══════════════════════════════════════════════════════ -->
+<div id="panel-equilibrio" class="panel active">
+  <div class="card">
+    <div class="card-title">⚖️ Punto de Equilibrio <span class="badge badge-nuevo">Esencial</span></div>
+    <div class="card-desc">Descubrí cuántas unidades necesitás vender para cubrir todos tus costos y empezar a ganar. Si vendés más de esto, ganás. Si vendés menos, perdés.</div>
+
+    <div class="grid-3">
+      <div class="campo">
+        <label>Precio de venta ($ por unidad)</label>
+        <input type="number" id="eq_precio" value="50" min="0" oninput="calcEquilibrio()">
+        <span class="ayuda">¿Cuánto cobrás por kg, litro o unidad que vendés?</span>
+      </div>
+      <div class="campo">
+        <label>Costo variable ($ por unidad)</label>
+        <input type="number" id="eq_cvar" value="28" min="0" oninput="calcEquilibrio()">
+        <span class="ayuda">Lo que te cuesta producir cada unidad: semillas, fertilizante, mano de obra directa, etc.</span>
+      </div>
+      <div class="campo">
+        <label>Costos fijos ($/mes)</label>
+        <input type="number" id="eq_cfijo" value="120000" min="0" oninput="calcEquilibrio()">
+        <span class="ayuda">Gastos que pagás igual aunque no produzcas: arrendamiento, servicios, sueldo fijo, amortizaciones.</span>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <div class="campo">
+      <label>Meta de ganancia mensual ($) — opcional</label>
+      <input type="number" id="eq_meta" value="50000" min="0" oninput="calcEquilibrio()">
+      <span class="ayuda">Si querés saber cuánto vender para alcanzar una ganancia específica, ingresála acá.</span>
+    </div>
+
+    <div class="resultados" id="eq_resultados"></div>
+    <div id="eq_barras" class="barra-wrap"></div>
+    <div id="eq_rec" class="recomendacion"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANEL 2: MARGEN Y RENTABILIDAD
+══════════════════════════════════════════════════════ -->
+<div id="panel-margen" class="panel">
+  <div class="card">
+    <div class="card-title">📊 Margen y Rentabilidad</div>
+    <div class="card-desc">Analizá cuánto te queda de cada peso que ingresa y si tu negocio es rentable comparado con alternativas como arrendar o un plazo fijo.</div>
+
+    <div class="grid-3">
+      <div class="campo">
+        <label>Ingresos totales ($/mes)</label>
+        <input type="number" id="mg_ingresos" value="800000" oninput="calcMargen()">
+        <span class="ayuda">Todo lo que entra de ventas en el mes.</span>
+      </div>
+      <div class="campo">
+        <label>Costos variables totales ($/mes)</label>
+        <input type="number" id="mg_cvar" value="350000" oninput="calcMargen()">
+        <span class="ayuda">Insumos, mano de obra directa, fletes, empaque.</span>
+      </div>
+      <div class="campo">
+        <label>Costos fijos totales ($/mes)</label>
+        <input type="number" id="mg_cfijo" value="180000" oninput="calcMargen()">
+        <span class="ayuda">Gastos que no cambian según lo que producís.</span>
+      </div>
+      <div class="campo">
+        <label>Capital invertido ($)</label>
+        <input type="number" id="mg_capital" value="2000000" oninput="calcMargen()">
+        <span class="ayuda">Cuánto dinero tenés puesto en el negocio (tierra, maquinaria, stock, etc.).</span>
+      </div>
+      <div class="campo">
+        <label>Tu sueldo ($/mes)</label>
+        <input type="number" id="mg_sueldo" value="60000" oninput="calcMargen()">
+        <span class="ayuda">Lo que querés ganar por tu tiempo dedicado. Es un costo real aunque no lo pagués a otro.</span>
+      </div>
+      <div class="campo">
+        <label>Tasa alternativa anual (%)</label>
+        <input type="number" id="mg_tasa" value="8" oninput="calcMargen()">
+        <span class="ayuda">¿Qué rendimiento te daría ese capital en otra inversión (plazo fijo, arrendamiento)? Referencia: ~6-10% anual en UY.</span>
+      </div>
+    </div>
+
+    <div class="resultados" id="mg_resultados"></div>
+    <div id="mg_rec" class="recomendacion"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANEL 3: SIMULADOR DE ESCENARIOS
+══════════════════════════════════════════════════════ -->
+<div id="panel-simulador" class="panel">
+  <div class="card">
+    <div class="card-title">🔮 Simulador de Escenarios <span class="badge badge-pro">Avanzado</span></div>
+    <div class="card-desc">Comparás tres escenarios (pesimista, normal y optimista) para tu emprendimiento. Muy útil antes de invertir o para presentar a un banco.</div>
+
+    <div class="grid-3">
+      <div class="campo">
+        <label>Precio base ($/unidad)</label>
+        <input type="number" id="sim_precio" value="50" oninput="calcSimulador()">
+        <span class="ayuda">El precio más probable de venta.</span>
+      </div>
+      <div class="campo">
+        <label>Volumen base (unidades/mes)</label>
+        <input type="number" id="sim_vol" value="5000" oninput="calcSimulador()">
+        <span class="ayuda">Cuántas unidades esperás vender en un mes normal.</span>
+      </div>
+      <div class="campo">
+        <label>Costo variable ($/unidad)</label>
+        <input type="number" id="sim_cvar" value="28" oninput="calcSimulador()">
+        <span class="ayuda">Costo directo de producir cada unidad.</span>
+      </div>
+      <div class="campo">
+        <label>Costos fijos ($/mes)</label>
+        <input type="number" id="sim_cfijo" value="120000" oninput="calcSimulador()">
+        <span class="ayuda">Gastos que pagás sí o sí cada mes.</span>
+      </div>
+      <div class="campo">
+        <label>Variación pesimista (%)</label>
+        <input type="number" id="sim_pesi" value="-25" oninput="calcSimulador()">
+        <span class="ayuda">Cuánto puede bajar el precio o volumen en el peor caso. Ej: -25 significa 25% menos.</span>
+      </div>
+      <div class="campo">
+        <label>Variación optimista (%)</label>
+        <input type="number" id="sim_opti" value="20" oninput="calcSimulador()">
+        <span class="ayuda">Cuánto puede subir en el mejor caso. Ej: 20 significa 20% más.</span>
+      </div>
+    </div>
+
+    <div id="sim_tabla" style="margin-top:1.25rem;overflow-x:auto"></div>
+    <div id="sim_rec" class="recomendacion"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANEL 4: CALCULADORA DE PRECIO
+══════════════════════════════════════════════════════ -->
+<div id="panel-precio" class="panel">
+  <div class="card">
+    <div class="card-title">💲 Calculadora de Precio Justo</div>
+    <div class="card-desc">Calculá el precio mínimo que tenés que cobrar para cubrir costos y obtener la ganancia que querés. Muy común que productores vendan por debajo del precio justo sin saberlo.</div>
+
+    <div class="grid-3">
+      <div class="campo">
+        <label>Costo directo ($/unidad)</label>
+        <input type="number" id="pr_costo" value="28" oninput="calcPrecio()">
+        <span class="ayuda">Lo que te cuesta producir una unidad (insumos + mano de obra directa).</span>
+      </div>
+      <div class="campo">
+        <label>Costos indirectos ($/mes)</label>
+        <input type="number" id="pr_cind" value="120000" oninput="calcPrecio()">
+        <span class="ayuda">Costos fijos que hay que repartir entre todo lo que producís.</span>
+      </div>
+      <div class="campo">
+        <label>Producción mensual (unidades)</label>
+        <input type="number" id="pr_prod" value="5000" oninput="calcPrecio()">
+        <span class="ayuda">Cuántas unidades producís por mes.</span>
+      </div>
+      <div class="campo">
+        <label>Ganancia deseada (%)</label>
+        <input type="number" id="pr_ganancia" value="30" oninput="calcPrecio()">
+        <span class="ayuda">¿Cuánto % de ganancia querés sobre el costo total? Ej: 30 = ganás $30 por cada $100 de costo.</span>
+      </div>
+      <div class="campo">
+        <label>Tu sueldo ($/mes)</label>
+        <input type="number" id="pr_sueldo" value="60000" oninput="calcPrecio()">
+        <span class="ayuda">Tu tiempo vale plata. Incluilo como costo para saber el precio real.</span>
+      </div>
+    </div>
+
+    <div class="resultados" id="pr_resultados"></div>
+    <div id="pr_rec" class="recomendacion"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANEL 5: FLUJO DE CAJA
+══════════════════════════════════════════════════════ -->
+<div id="panel-flujo" class="panel">
+  <div class="card">
+    <div class="card-title">💧 Flujo de Caja Mensual</div>
+    <div class="card-desc">Proyectá si vas a tener plata disponible cada mes. Muchos negocios rentables igual quiebran porque se les acaba el efectivo en algún momento. Este análisis lo anticipa.</div>
+
+    <div class="grid-2">
+      <div class="campo">
+        <label>Ingresos mensuales promedio ($)</label>
+        <input type="number" id="fl_ingresos" value="600000" oninput="calcFlujo()">
+        <span class="ayuda">Plata que efectivamente entra al negocio cada mes.</span>
+      </div>
+      <div class="campo">
+        <label>Costos variables ($/mes)</label>
+        <input type="number" id="fl_cvar" value="250000" oninput="calcFlujo()">
+        <span class="ayuda">Pagos que hacés directamente ligados a lo que producís.</span>
+      </div>
+      <div class="campo">
+        <label>Costos fijos ($/mes)</label>
+        <input type="number" id="fl_cfijo" value="150000" oninput="calcFlujo()">
+        <span class="ayuda">Pagos que hacés igual todos los meses.</span>
+      </div>
+      <div class="campo">
+        <label>Inversión inicial ($)</label>
+        <input type="number" id="fl_inv" value="500000" oninput="calcFlujo()">
+        <span class="ayuda">Lo que ponés al arrancar (se descuenta en el mes 1).</span>
+      </div>
+      <div class="campo">
+        <label>Saldo inicial ($)</label>
+        <input type="number" id="fl_saldo" value="0" oninput="calcFlujo()">
+        <span class="ayuda">Plata disponible antes de arrancar.</span>
+      </div>
+      <div class="campo">
+        <label>Mes de zafra (1-12, 0=ninguno)</label>
+        <input type="number" id="fl_zafra_mes" value="11" min="0" max="12" oninput="calcFlujo()">
+        <span class="ayuda">Si tenés un mes de ventas altas (zafra), indicalo. Los ingresos de ese mes se multiplican.</span>
+      </div>
+      <div class="campo">
+        <label>Multiplicador zafra (ej: 2 = doble)</label>
+        <input type="number" id="fl_zafra_mult" value="2.5" step="0.1" min="1" oninput="calcFlujo()">
+        <span class="ayuda">Por cuánto multiplicar los ingresos del mes de zafra.</span>
+      </div>
+    </div>
+
+    <div id="fl_tabla" style="margin-top:1.25rem;overflow-x:auto"></div>
+    <div id="fl_rec" class="recomendacion"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ── PANEL ASESOR IA ── -->
+<div id="overlay" onclick="cerrarAsesor()"></div>
+<div id="panel-asesor">
+  <div class="asesor-header">
+    <div>
+      <h3>🤖 Asesor AgroAnalítica</h3>
+      <p>Consultame sobre tu negocio agropecuario</p>
+    </div>
+    <button class="btn-cerrar" onclick="cerrarAsesor()">✕</button>
+  </div>
+  <div class="asesor-msgs" id="asesor-msgs">
+    <div class="msg bot">¡Hola! Soy tu asesor de AgroAnalítica UY 🌿<br><br>Puedo ayudarte con preguntas sobre <strong>costos, precios, rentabilidad, financiamiento o estrategia</strong> para tu emprendimiento agropecuario en Uruguay.<br><br>¿En qué te puedo ayudar hoy?</div>
+    <div class="msg bot">💡 <strong>Sugerencias para empezar:</strong><br>• ¿Cómo mejorar mi margen de ganancia?<br>• ¿Qué es el punto de equilibrio?<br>• ¿Conviene arrendar o comprar tierra?<br>• ¿Cómo fijar el precio de venta?</div>
+  </div>
+  <div class="asesor-input">
+    <input type="text" id="asesor-input" placeholder="Escribí tu pregunta..." onkeydown="if(event.key==='Enter')enviarMensaje()">
+    <button class="btn-enviar" onclick="enviarMensaje()">Enviar</button>
+  </div>
+</div>
+
+<script>
+// ── TABS ──
+function switchTab(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── FORMATO ──
+function fmt(n,d=0){
+  if(!isFinite(n)) return 'N/A';
+  const s=n<0?'-':'';
+  const a=Math.abs(n).toFixed(d);
+  const[i,f]=a.split('.');
+  return s+'$'+i.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(f?','+f:'');
+}
+function fmtN(n,d=1){
+  if(!isFinite(n)) return 'N/A';
+  return n.toFixed(d).replace('.',',');
+}
+function fmtPct(n){return isFinite(n)?fmtN(n,1)+'%':'N/A';}
+
+// ── PUNTO DE EQUILIBRIO ──
+function calcEquilibrio(){
+  const precio=+document.getElementById('eq_precio').value||0;
+  const cvar=+document.getElementById('eq_cvar').value||0;
+  const cfijo=+document.getElementById('eq_cfijo').value||0;
+  const meta=+document.getElementById('eq_meta').value||0;
+  const mc=precio-cvar;
+  const mcPct=precio>0?(mc/precio)*100:0;
+  const peUnid=mc>0?cfijo/mc:Infinity;
+  const pePesos=peUnid*precio;
+  const metaUnid=mc>0?(cfijo+meta)/mc:Infinity;
+  const metaPesos=metaUnid*precio;
+
+  const r=document.getElementById('eq_resultados');
+  r.innerHTML=`
+    <div class="res-card neutro">
+      <div class="res-label">Margen de contribución</div>
+      <div class="res-val">${fmt(mc)}</div>
+      <div class="res-ayuda">Por cada unidad que vendés, te quedan ${fmt(mc)} para cubrir costos fijos y ganar.</div>
+    </div>
+    <div class="res-card neutro">
+      <div class="res-label">Margen de contribución %</div>
+      <div class="res-val">${fmtPct(mcPct)}</div>
+      <div class="res-ayuda">Del precio de venta, el ${fmtPct(mcPct)} es margen. Cuanto más alto, mejor.</div>
+    </div>
+    <div class="res-card ${peUnid<1000?'positivo':'negativo'}">
+      <div class="res-label">Punto de equilibrio (unidades)</div>
+      <div class="res-val">${isFinite(peUnid)?Math.ceil(peUnid).toLocaleString('es-UY'):'>∞'}</div>
+      <div class="res-ayuda">A partir de acá empezás a ganar. Si vendés menos, perdés plata.</div>
+    </div>
+    <div class="res-card ${peUnid<1000?'positivo':'negativo'}">
+      <div class="res-label">Punto de equilibrio ($)</div>
+      <div class="res-val">${isFinite(pePesos)?fmt(pePesos):'N/A'}</div>
+      <div class="res-ayuda">Facturación mínima mensual para no perder ni ganar.</div>
+    </div>
+    ${meta>0?`
+    <div class="res-card tierra">
+      <div class="res-label">Para tu meta de ganancia</div>
+      <div class="res-val">${isFinite(metaUnid)?Math.ceil(metaUnid).toLocaleString('es-UY'):'>∞'} unid.</div>
+      <div class="res-ayuda">Necesitás vender ${isFinite(metaPesos)?fmt(metaPesos):'N/A'} para ganar ${fmt(meta)}/mes.</div>
+    </div>`:''}
+  `;
+
+  // Barras
+  const b=document.getElementById('eq_barras');
+  const pctCV=precio>0?Math.min((cvar/precio)*100,100):0;
+  const pctCF=precio>0?Math.min(((cfijo/Math.max(peUnid,1))/precio)*100,100):0;
+  b.innerHTML=`
+    <div style="margin-bottom:.75rem">
+      <div class="barra-label"><span>Costo variable sobre precio (${fmtPct(pctCV)})</span><span>${fmt(cvar)}</span></div>
+      <div class="barra-bg"><div class="barra-fill rojo-b" style="width:${pctCV}%"></div></div>
+    </div>
+    <div style="margin-bottom:.75rem">
+      <div class="barra-label"><span>Margen de contribución (${fmtPct(mcPct)})</span><span>${fmt(mc)}</span></div>
+      <div class="barra-bg"><div class="barra-fill verde-b" style="width:${Math.max(0,100-pctCV)}%"></div></div>
+    </div>
+  `;
+
+  // Recomendacion
+  const rec=document.getElementById('eq_rec');
+  rec.className='recomendacion show';
+  if(!isFinite(peUnid)||mc<=0){
+    rec.className+=' rojo';
+    rec.innerHTML='🚨 <strong>Alerta:</strong> El costo variable es igual o mayor al precio de venta. Estás perdiendo plata en cada unidad que vendés. Necesitás subir el precio o bajar costos urgente.';
+  } else if(mcPct<20){
+    rec.className+=' amarillo';
+    rec.innerHTML='⚠️ <strong>Margen ajustado:</strong> Con menos del 20% de margen de contribución, cualquier imprevisto (suba de insumos, baja de demanda) puede empujarte a pérdida. Revisá si podés reducir costos variables o subir el precio.';
+  } else if(mcPct>=40){
+    rec.className+=' verde';
+    rec.innerHTML='✅ <strong>Buen margen:</strong> Tu margen de contribución es sólido. Cada unidad genera buen excedente para cubrir fijos. Enfocate en aumentar el volumen de ventas para maximizar ganancias.';
+  } else {
+    rec.className+=' verde';
+    rec.innerHTML='✅ <strong>Margen razonable:</strong> Tenés un margen de contribución aceptable. Para mejorar: 1) Buscá reducir costos variables comprando en volumen, 2) Evaluá si el mercado soporta un pequeño aumento de precio.';
+  }
+}
+
+// ── MARGEN ──
+function calcMargen(){
+  const ing=+document.getElementById('mg_ingresos').value||0;
+  const cv=+document.getElementById('mg_cvar').value||0;
+  const cf=+document.getElementById('mg_cfijo').value||0;
+  const cap=+document.getElementById('mg_capital').value||0;
+  const sueldo=+document.getElementById('mg_sueldo').value||0;
+  const tasa=+document.getElementById('mg_tasa').value||0;
+
+  const mgBruto=ing-cv;
+  const mgBrutoPct=ing>0?(mgBruto/ing)*100:0;
+  const ebitda=mgBruto-cf;
+  const costoOportunidad=cap*(tasa/100)/12;
+  const utilidadReal=ebitda-sueldo-costoOportunidad;
+  const rentabilidadMensual=cap>0?(utilidadReal/cap)*100:0;
+  const rentabilidadAnual=rentabilidadMensual*12;
+
+  const r=document.getElementById('mg_resultados');
+  r.innerHTML=`
+    <div class="res-card ${mgBrutoPct>30?'positivo':'amarillo'}">
+      <div class="res-label">Margen bruto</div>
+      <div class="res-val">${fmtPct(mgBrutoPct)}</div>
+      <div class="res-ayuda">De cada $100 que vendés, ${fmtPct(mgBrutoPct)} queda después de costos variables. Bueno: >40%, Riesgo: <20%.</div>
+    </div>
+    <div class="res-card ${ebitda>0?'positivo':'negativo'}">
+      <div class="res-label">Resultado operativo (EBITDA)</div>
+      <div class="res-val">${fmt(ebitda)}</div>
+      <div class="res-ayuda">Ganancia antes de tu sueldo y costo de oportunidad. Si es negativo, el negocio no se sostiene.</div>
+    </div>
+    <div class="res-card neutro">
+      <div class="res-label">Costo de oportunidad</div>
+      <div class="res-val">${fmt(costoOportunidad)}</div>
+      <div class="res-ayuda">Lo que ganarías si pusieras ese capital en otra inversión al ${fmtPct(tasa)} anual. Hay que ganarlo para que valga la pena.</div>
+    </div>
+    <div class="res-card ${utilidadReal>0?'positivo':'negativo'}">
+      <div class="res-label">Utilidad real (neta)</div>
+      <div class="res-val">${fmt(utilidadReal)}</div>
+      <div class="res-ayuda">Lo que realmente ganás después de pagarte, cubrir fijos y superar la alternativa de inversión.</div>
+    </div>
+    <div class="res-card ${rentabilidadAnual>tasa?'positivo':'negativo'}">
+      <div class="res-label">Rentabilidad anual</div>
+      <div class="res-val">${fmtPct(rentabilidadAnual)}</div>
+      <div class="res-ayuda">Si es menor al ${fmtPct(tasa)} (tu tasa alternativa), conviene más otra inversión.</div>
+    </div>
+  `;
+
+  const rec=document.getElementById('mg_rec');
+  rec.className='recomendacion show';
+  if(utilidadReal<=0){
+    rec.className+=' rojo';
+    rec.innerHTML=`🚨 <strong>El negocio no es rentable en términos reales.</strong> Aunque podés tener flujo positivo, no superás el costo de oportunidad + tu sueldo. Opciones: subir precios, bajar costos, o repensar la escala del negocio.`;
+  } else if(rentabilidadAnual<tasa){
+    rec.className+=' amarillo';
+    rec.innerHTML=`⚠️ <strong>Rentabilidad por debajo de la alternativa.</strong> Ganás plata, pero menos que si invirtieras en un instrumento financiero de ${fmtPct(tasa)} anual. Considerá crecer en escala para mejorar la rentabilidad.`;
+  } else {
+    rec.className+=' verde';
+    rec.innerHTML=`✅ <strong>Negocio rentable y superador.</strong> Tu rentabilidad (${fmtPct(rentabilidadAnual)}) supera la alternativa de inversión (${fmtPct(tasa)}). El negocio agrega valor real. Foco en crecer y mantener márgenes.`;
+  }
+}
+
+// ── SIMULADOR ──
+function calcSimulador(){
+  const precio=+document.getElementById('sim_precio').value||0;
+  const vol=+document.getElementById('sim_vol').value||0;
+  const cv=+document.getElementById('sim_cvar').value||0;
+  const cf=+document.getElementById('sim_cfijo').value||0;
+  const pesi=+document.getElementById('sim_pesi').value||0;
+  const opti=+document.getElementById('sim_opti').value||0;
+
+  const escenarios=[
+    {nombre:'🔴 Pesimista', factorP:1+pesi/100, factorV:1+pesi/100, clase:'negativo'},
+    {nombre:'🟡 Esperado',  factorP:1,           factorV:1,           clase:'neutro'},
+    {nombre:'🟢 Optimista', factorP:1+opti/100,  factorV:1+opti/100,  clase:'positivo'},
+  ];
+
+  let html=`<table class="tabla-comp">
+    <tr>
+      <th>Escenario</th>
+      <th>Precio</th>
+      <th>Volumen</th>
+      <th>Ingresos</th>
+      <th>Costos variables</th>
+      <th>Margen bruto</th>
+      <th>Resultado neto</th>
+    </tr>`;
+  escenarios.forEach(e=>{
+    const p=precio*e.factorP, v=vol*e.factorV;
+    const ing=p*v, cvT=cv*v, mg=ing-cvT, neto=mg-cf;
+    const color=neto>0?'#166534':'#991b1b';
+    html+=`<tr>
+      <td style="font-weight:700">${e.nombre}</td>
+      <td>${fmt(p)}</td>
+      <td>${Math.round(v).toLocaleString('es-UY')}</td>
+      <td>${fmt(ing)}</td>
+      <td>${fmt(cvT)}</td>
+      <td>${fmt(mg)}</td>
+      <td style="font-weight:700;color:${color}">${fmt(neto)}</td>
+    </tr>`;
+  });
+  html+='</table>';
+  document.getElementById('sim_tabla').innerHTML=html;
+
+  const netoBase=(precio*vol)-(cv*vol)-cf;
+  const rec=document.getElementById('sim_rec');
+  rec.className='recomendacion show';
+  if(netoBase<=0){
+    rec.className+=' rojo';
+    rec.innerHTML='🚨 <strong>Incluso en el escenario esperado el negocio pierde plata.</strong> Revisá estructura de costos o mercado objetivo antes de invertir.';
+  } else {
+    const netoPesi=(precio*(1+pesi/100)*vol*(1+pesi/100))-(cv*vol*(1+pesi/100))-cf;
+    if(netoPesi<0){
+      rec.className+=' amarillo';
+      rec.innerHTML='⚠️ <strong>Viable en condiciones normales, vulnerable al pesimismo.</strong> Tu negocio funciona bien en lo esperado, pero el escenario pesimista genera pérdida. Recomendamos tener un fondo de reserva de al menos 3 meses de costos fijos.';
+    } else {
+      rec.className+=' verde';
+      rec.innerHTML='✅ <strong>Negocio robusto.</strong> Es rentable incluso en el escenario pesimista. Esto indica que tenés buena resiliencia ante caídas de precio o demanda.';
+    }
+  }
+}
+
+// ── PRECIO ──
+function calcPrecio(){
+  const cd=+document.getElementById('pr_costo').value||0;
+  const ci=+document.getElementById('pr_cind').value||0;
+  const prod=+document.getElementById('pr_prod').value||1;
+  const gan=+document.getElementById('pr_ganancia').value||0;
+  const sueldo=+document.getElementById('pr_sueldo').value||0;
+
+  const costoIndUn=(ci+sueldo)/prod;
+  const costoTotal=cd+costoIndUn;
+  const precioMinimo=costoTotal*(1+gan/100);
+  const margenAbs=precioMinimo-costoTotal;
+
+  const r=document.getElementById('pr_resultados');
+  r.innerHTML=`
+    <div class="res-card neutro">
+      <div class="res-label">Costo total por unidad</div>
+      <div class="res-val">${fmt(costoTotal,2)}</div>
+      <div class="res-ayuda">Directo (${fmt(cd,2)}) + parte de fijos y tu sueldo (${fmt(costoIndUn,2)}) por unidad.</div>
+    </div>
+    <div class="res-card tierra">
+      <div class="res-label">Precio mínimo de venta</div>
+      <div class="res-val">${fmt(precioMinimo,2)}</div>
+      <div class="res-ayuda">Si vendés a menos de esto, perdés plata. Incluye todos los costos + ${fmtPct(gan)} de ganancia.</div>
+    </div>
+    <div class="res-card positivo">
+      <div class="res-label">Ganancia por unidad</div>
+      <div class="res-val">${fmt(margenAbs,2)}</div>
+      <div class="res-ayuda">Lo que ganás neto por cada unidad vendida al precio mínimo calculado.</div>
+    </div>
+    <div class="res-card positivo">
+      <div class="res-label">Ganancia mensual proyectada</div>
+      <div class="res-val">${fmt(margenAbs*prod)}</div>
+      <div class="res-ayuda">Si vendés las ${prod.toLocaleString('es-UY')} unidades al precio calculado.</div>
+    </div>
+  `;
+
+  const rec=document.getElementById('pr_rec');
+  rec.className='recomendacion show verde';
+  rec.innerHTML=`💡 <strong>Tu precio mínimo es ${fmt(precioMinimo,2)}.</strong> Comparalo con el precio de mercado. Si el mercado paga más: ¡ganás más! Si paga menos: necesitás bajar costos o buscar otro segmento de clientes que valore más tu producto.`;
+}
+
+// ── FLUJO ──
+function calcFlujo(){
+  const ing=+document.getElementById('fl_ingresos').value||0;
+  const cv=+document.getElementById('fl_cvar').value||0;
+  const cf=+document.getElementById('fl_cfijo').value||0;
+  const inv=+document.getElementById('fl_inv').value||0;
+  const saldo0=+document.getElementById('fl_saldo').value||0;
+  const zafraM=+document.getElementById('fl_zafra_mes').value||0;
+  const zafraMult=+document.getElementById('fl_zafra_mult').value||1;
+
+  let html=`<table class="tabla-comp" style="min-width:700px">
+    <tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Flujo neto</th><th>Saldo acumulado</th></tr>`;
+  let acum=saldo0;
+  let mesesNeg=0;
+  for(let m=1;m<=12;m++){
+    const mult=(zafraM>0&&m===zafraM)?zafraMult:1;
+    const ingM=ing*mult;
+    const invM=m===1?inv:0;
+    const egM=cv+cf+invM;
+    const flujo=ingM-egM;
+    acum+=flujo;
+    if(acum<0) mesesNeg++;
+    const color=acum>=0?'#166534':'#991b1b';
+    html+=`<tr>
+      <td><strong>Mes ${m}</strong>${zafraM>0&&m===zafraM?' 🌟':''}${m===1&&inv>0?' 📦':''}</td>
+      <td>${fmt(ingM)}</td>
+      <td>${fmt(egM)}</td>
+      <td style="color:${flujo>=0?'#166534':'#991b1b'};font-weight:600">${fmt(flujo)}</td>
+      <td style="color:${color};font-weight:700">${fmt(acum)}</td>
+    </tr>`;
+  }
+  html+='</table>';
+  document.getElementById('fl_tabla').innerHTML=html;
+
+  const rec=document.getElementById('fl_rec');
+  rec.className='recomendacion show';
+  if(mesesNeg>0){
+    rec.className+=' rojo';
+    rec.innerHTML=`🚨 <strong>El saldo acumulado cae en negativo en ${mesesNeg} mes(es).</strong> Esto significa que en esos meses no tenés plata suficiente para pagar tus gastos. Soluciones: conseguir financiamiento puente, ajustar el timing de pagos, o armar un fondo de reserva antes de arrancar.`;
+  } else {
+    const flujoBase=ing-cv-cf;
+    rec.className+=' verde';
+    rec.innerHTML=`✅ <strong>Flujo positivo durante todo el año.</strong> Tu negocio genera suficiente efectivo todos los meses. Flujo mensual base: ${fmt(flujoBase)}. Esto te da capacidad de reinvertir o ahorrar.`;
+  }
+}
+
+// ── PANEL ASESOR ──
+function abrirAsesor(){
+  document.getElementById('panel-asesor').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('asesor-input').focus();
+}
+function cerrarAsesor(){
+  document.getElementById('panel-asesor').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+async function enviarMensaje(){
+  const input=document.getElementById('asesor-input');
+  const texto=input.value.trim();
+  if(!texto) return;
+  input.value='';
+
+  const msgs=document.getElementById('asesor-msgs');
+  msgs.innerHTML+=`<div class="msg user">${texto}</div>`;
+  msgs.innerHTML+=`<div class="msg loading" id="msg-loading">✍️ Pensando...</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Sos un asesor experto en emprendimientos agropecuarios de Uruguay. 
+Respondés de forma práctica, concisa y en español rioplatense informal.
+Conocés bien el contexto agropecuario uruguayo: precios de la tierra, ganado, horticultura intensiva, praderas, financiamiento BROU, Plan Agropecuario, INIA, MGAP.
+Cuando sea relevante, mencioná referencias locales concretas.
+Respondés en máximo 3-4 párrafos cortos. Usás emojis con moderación para hacer la respuesta más legible.`,
+        messages:[{role:'user',content:texto}]
+      })
+    });
+    const data=await resp.json();
+    document.getElementById('msg-loading').remove();
+    const respText=data.content?.[0]?.text||'No pude procesar la respuesta.';
+    msgs.innerHTML+=`<div class="msg bot">${respText.replace(/\n/g,'<br>')}</div>`;
+  } catch(e){
+    document.getElementById('msg-loading').remove();
+    msgs.innerHTML+=`<div class="msg bot">⚠️ Hubo un error al conectar. Verificá tu conexión e intentá de nuevo.</div>`;
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── INIT ──
+calcEquilibrio();
+calcMargen();
+calcSimulador();
+calcPrecio();
+calcFlujo();
+</script>
+</body>
+</html>
