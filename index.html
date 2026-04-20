@@ -14,7 +14,7 @@
     header{background:linear-gradient(120deg,var(--primary),var(--primary-dark));color:#fff;padding:1.4rem 1rem;text-align:center}
     header h1{margin:0;font-size:clamp(1.4rem,3vw,2rem)} header p{margin:.35rem 0 0;opacity:.95}
     nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
-    .nav-wrap{max-width:1100px;margin:0 auto;padding:.6rem;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5rem}
+    .nav-wrap{max-width:1100px;margin:0 auto;padding:.6rem;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.5rem}
     .tab-btn{border:1px solid var(--border);background:#fff;padding:.65rem .5rem;border-radius:10px;cursor:pointer;font-weight:600}
     .tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
     main{max-width:1100px;margin:1rem auto;padding:0 .8rem 2rem}
@@ -44,6 +44,7 @@
     .small-note{font-size:.84rem;color:var(--muted)}
     footer{margin-top:1.5rem;border-top:1px solid var(--border);background:#fff;color:var(--muted);text-align:center;padding:1rem;font-size:.9rem}
     @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.results{grid-template-columns:1fr}}
+    @media (max-width:900px){.nav-wrap{grid-template-columns:repeat(3,1fr)}}
     @media (max-width:600px){.nav-wrap{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
     /* Print header (solo visible al imprimir) */
     .print-header{display:none;text-align:center;padding:1.5rem 0 1rem;border-bottom:3px solid var(--primary);margin-bottom:1rem}
@@ -81,10 +82,9 @@
   </style>
 </head>
 <body>
-  <header style="position:relative">
+  <header>
     <h1>AgroAnalítica UY</h1>
     <p>Análisis económico para el agro uruguayo</p>
-    <a href="dashboard.html" style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;padding:.5rem .9rem;border-radius:10px;font-weight:600;font-size:.9rem;border:1px solid rgba(255,255,255,.35)">🧭 Centro de Decisiones</a>
   </header>
   <div class="print-header">
     <h1>AgroAnalítica UY</h1>
@@ -98,6 +98,7 @@
       <button class="tab-btn" data-target="forrajero">Balance Forrajero</button>
       <button class="tab-btn" data-target="flujo">Flujo de Fondos</button>
       <button class="tab-btn" data-target="viticultura">Viticultura</button>
+      <button class="tab-btn" data-target="decisiones">Centro de Decisiones</button>
     </div>
   </nav>
   <main>
@@ -450,6 +451,9 @@
           <tbody id="vt_cred_body"></tbody>
         </table>
       </div>
+    </section>
+    <section id="decisiones" class="module" style="padding:0;overflow:hidden">
+      <iframe src="dashboard.html" style="width:100%;height:calc(100vh - 180px);min-height:700px;border:0;border-radius:14px;display:block" title="Centro de Decisiones"></iframe>
     </section>
   </main>
   <footer>Proyecto UCU – Ingeniería Agronómica 2026 · AgroAnalítica UY – Herramienta de apoyo para análisis económico agropecuario</footer>
