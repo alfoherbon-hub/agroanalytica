@@ -79,7 +79,39 @@
       .chart-wrap{break-inside:avoid;page-break-inside:avoid}
       footer{display:block!important;border-top:2px solid var(--primary);padding:.8rem;font-size:.8rem;margin-top:1rem}
     }
+    /* NDVI map module */
+    #ndvi_map{height:420px;border:1px solid var(--border);border-radius:12px;margin-top:8px}
+    .ndvi-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-top:8px}
+    @media (max-width:900px){.ndvi-grid{grid-template-columns:1fr}}
+    .ndvi-panel{border:1px solid var(--border);border-radius:12px;padding:.7rem;background:#fff;font-size:13px}
+    .ndvi-panel h4{margin:.1rem 0 .5rem;font-size:.95rem;color:var(--primary-dark)}
+    .ndvi-creds{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:.6rem;margin-bottom:.6rem}
+    .ndvi-creds details summary{cursor:pointer;font-weight:700;color:#9a3412}
+    .ndvi-creds input{width:100%;padding:.4rem;border:1px solid var(--border);border-radius:6px;margin-top:4px;font-size:12px;font-family:monospace}
+    .ndvi-creds .row{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
+    .ndvi-creds .row button{flex:1;padding:.45rem;border:none;border-radius:6px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;min-width:120px}
+    .ndvi-creds .row button.danger{background:#9ca3af}
+    .ndvi-fields-list{max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+    .ndvi-field-row{display:grid;grid-template-columns:1.4fr .8fr .9fr auto;gap:.4rem;align-items:center;padding:.45rem;border-bottom:1px solid #f3f4f6}
+    .ndvi-field-row:last-child{border-bottom:none}
+    .ndvi-field-row input,.ndvi-field-row select{padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:12px;width:100%}
+    .ndvi-field-row .ha{font-size:11px;color:var(--muted);text-align:right}
+    .ndvi-field-row .del{background:transparent;border:none;color:#dc2626;cursor:pointer;font-weight:700;font-size:14px}
+    .ndvi-status{font-size:12px;color:var(--muted);margin-top:.4rem;min-height:18px}
+    .ndvi-quality{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:.4rem}
+    .ndvi-q-cell{font-size:9px;text-align:center;padding:3px 2px;border-radius:3px;color:#fff;font-weight:700}
+    .ndvi-controls{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+    .ndvi-controls input,.ndvi-controls select{padding:.4rem;border:1px solid var(--border);border-radius:6px;font-size:12px}
+    .ndvi-controls button{padding:.45rem .7rem;border:none;border-radius:6px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;font-size:12px}
+    .ndvi-controls button.secondary{background:#0f766e}
+    .ndvi-controls button.ghost{background:#fff;color:var(--text);border:1px solid var(--border)}
+    .ndvi-controls button:disabled{opacity:.5;cursor:not-allowed}
+    .leaflet-container{font:inherit}
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 </head>
 <body>
   <header>
@@ -252,13 +284,58 @@
         <div class="field"><label>Verdeo invierno</label><input id="bf_vi" type="number" min="0" value="25"></div>
         <div class="field"><label>Verdeo verano</label><input id="bf_vv" type="number" min="0" value="15"></div>
       </div>
-      <!-- BLOQUE NDVI mensual -->
-<div class="block-title">📡 NDVI mensual por satélite (opcional)</div>
-<p class="hint" style="margin-top:-8px;margin-bottom:12px;">
-  Consultá el NDVI de cada potrero en
-  <a href="https://browser.dataspace.copernicus.eu/" target="_blank" style="color:var(--primary-dark);font-weight:600;">Copernicus Browser (Sentinel-2, gratis)</a>
-  o <a href="https://app.onesoil.ai" target="_blank" style="color:var(--primary-dark);font-weight:600;">OneSoil</a>,
-  y cargá el valor promedio de cada mes. Dejá 0 en los meses sin dato (se usa la referencia).
+      <!-- BLOQUE NDVI satelital con polígonos -->
+<div class="block-title">📡 NDVI satelital por potrero (Sentinel-2)</div>
+<p class="hint" style="margin-top:-8px;margin-bottom:8px;">
+  Dibujá tus potreros en el mapa o importá un GeoJSON/KML. Cada potrero se asigna a un tipo de pastura.
+  El cálculo usa la <b>mediana mensual</b> de Sentinel-2 con máscara de nubes (SCL) para mejorar la confiabilidad.
+</p>
+<div class="ndvi-creds">
+  <details>
+    <summary>🔐 Credenciales Copernicus Data Space (se guardan solo en este navegador)</summary>
+    <p style="font-size:12px;margin:.4rem 0;color:#7c2d12;">
+      Crealas gratis en <a href="https://shapps.dataspace.copernicus.eu/dashboard/#/account/settings" target="_blank">CDSE → User Settings → OAuth clients</a>.
+      <b>Nunca subas estas credenciales al repo público.</b>
+    </p>
+    <label style="font-size:12px;font-weight:700">Client ID</label>
+    <input id="ndvi_cid" type="text" autocomplete="off" placeholder="sh-xxxxxxxx-xxxx-..."/>
+    <label style="font-size:12px;font-weight:700;display:block;margin-top:6px">Client Secret</label>
+    <input id="ndvi_csec" type="password" autocomplete="off" placeholder="••••••••••••"/>
+    <div class="row">
+      <button id="ndvi_save_creds">Guardar credenciales</button>
+      <button id="ndvi_clear_creds" class="danger">Borrar</button>
+      <button id="ndvi_test_creds" class="danger" style="background:#0f766e">Probar conexión</button>
+    </div>
+    <div id="ndvi_creds_status" class="ndvi-status"></div>
+  </details>
+</div>
+<div class="ndvi-grid">
+  <div>
+    <div id="ndvi_map"></div>
+    <div class="ndvi-controls">
+      <label style="font-size:12px;font-weight:700;align-self:center">Año:</label>
+      <input id="ndvi_year" type="number" min="2017" max="2030" step="1" style="width:90px"/>
+      <label style="font-size:12px;font-weight:700;align-self:center">Nubes máx %:</label>
+      <input id="ndvi_cloud" type="number" min="0" max="100" step="5" value="60" style="width:80px"/>
+      <button id="ndvi_run">Calcular NDVI 12 meses</button>
+      <button id="ndvi_import" class="ghost">Importar GeoJSON</button>
+      <button id="ndvi_export" class="ghost">Exportar GeoJSON</button>
+      <input id="ndvi_file" type="file" accept=".geojson,.json" style="display:none"/>
+      <button id="ndvi_clear" class="ghost">Limpiar todo</button>
+    </div>
+    <div id="ndvi_status" class="ndvi-status"></div>
+  </div>
+  <div class="ndvi-panel">
+    <h4>Potreros</h4>
+    <div id="ndvi_fields_list" class="ndvi-fields-list"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:.5rem">
+      Asigná cada potrero a una pastura. Al calcular, los valores mensuales (mediana ponderada por área) se cargan automáticamente en la tabla de abajo.
+    </p>
+  </div>
+</div>
+<div class="block-title" style="margin-top:1rem">NDVI mensual (editable manualmente)</div>
+<p class="hint" style="margin-top:-8px;margin-bottom:8px;">
+  Se llena con el cálculo satelital. Podés sobreescribir un mes a mano si querés. Dejá 0 para usar la referencia regional.
 </p>
 <div style="overflow-x:auto;margin-bottom:8px;">
 <table id="bf_ndvi_table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:720px;">
@@ -274,6 +351,7 @@
   <tbody id="bf_ndvi_tbody"></tbody>
 </table>
 </div>
+<div id="ndvi_quality_grid"></div>
 <div id="bf_ndvi_semaforo" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px 0;"></div>
       <div class="block-title">Producción forrajera (kg MS/ha/año) y aprovechamiento</div>
       <div class="grid">
@@ -494,6 +572,7 @@
         document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
         btn.classList.add("active");
         document.querySelectorAll(".module").forEach(m=>m.classList.toggle("active",m.id===target));
+        if(target==="forrajero"){ setTimeout(initNdviMap, 50); }
       });
     });
     // Horticultura
@@ -808,6 +887,406 @@
       $("r_bf_deficit").textContent=deficit>0?`${deficit} meses`:"Ninguno";
       $("r_bf_deficit").classList.toggle("negative",deficit>0);
       drawGroupedBarChart("bf_chart",BF_MESES,ofArr,demArr);
+    }
+    // ═══════════════════════════════════════════════════════════════
+    // Módulo NDVI satelital (Sentinel-2 vía Copernicus Data Space)
+    // ═══════════════════════════════════════════════════════════════
+    const NDVI_CREDS_KEY = "agroanalitica_ndvi_creds_v1";
+    const NDVI_FIELDS_KEY = "agroanalitica_ndvi_fields_v1";
+    const NDVI_CACHE_KEY  = "agroanalitica_ndvi_cache_v1";
+    const NDVI_TOKEN_URL  = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token";
+    const NDVI_STATS_URL  = "https://sh.dataspace.copernicus.eu/api/v1/statistics";
+    const NDVI_EVALSCRIPT = `//VERSION=3
+function setup(){
+  return {
+    input:[{bands:["B04","B08","SCL","dataMask"]}],
+    output:[
+      {id:"ndvi", bands:1, sampleType:"FLOAT32"},
+      {id:"dataMask", bands:1}
+    ]
+  };
+}
+function evaluatePixel(s){
+  // SCL: 4=vegetation, 5=bare, 6=water, 7=unclassified — el resto se descarta
+  let valid = (s.SCL===4 || s.SCL===5 || s.SCL===6) ? 1 : 0;
+  let denom = s.B08 + s.B04;
+  let ndvi  = denom > 0 ? (s.B08 - s.B04) / denom : 0;
+  return { ndvi:[ndvi], dataMask:[s.dataMask * valid] };
+}`;
+    let ndviMap=null, ndviDrawn=null, ndviFields=[], ndviToken=null, ndviTokenExp=0;
+    let ndviProxyMode=null; // null=desconocido, true=usar /api/cdse, false=fetch directo
+    async function detectNdviProxy(){
+      if(ndviProxyMode!==null) return ndviProxyMode;
+      try{
+        const r = await fetch("/api/cdse", {method:"GET"});
+        if(r.ok){
+          const j = await r.json();
+          ndviProxyMode = !!j.proxy;
+          // Si el proxy existe, ocultamos el form de credenciales (no se necesita)
+          const credsBox = document.querySelector(".ndvi-creds");
+          if(credsBox && ndviProxyMode){
+            credsBox.style.display = "none";
+          }
+        }else ndviProxyMode = false;
+      }catch(e){ ndviProxyMode = false; }
+      return ndviProxyMode;
+    }
+    function ndviUid(){return "f"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);}
+    function loadNdviCreds(){try{return JSON.parse(localStorage.getItem(NDVI_CREDS_KEY)||"null");}catch(e){return null;}}
+    function saveNdviCreds(c){localStorage.setItem(NDVI_CREDS_KEY,JSON.stringify(c));}
+    function loadNdviFields(){try{return JSON.parse(localStorage.getItem(NDVI_FIELDS_KEY)||"[]");}catch(e){return [];}}
+    function saveNdviFields(){localStorage.setItem(NDVI_FIELDS_KEY,JSON.stringify(ndviFields));}
+    function ndviStatus(msg,color){const el=$("ndvi_status"); if(el){el.textContent=msg||""; el.style.color=color||"var(--muted)";}}
+    function ndviCredsStatus(msg,color){const el=$("ndvi_creds_status"); if(el){el.textContent=msg||""; el.style.color=color||"var(--muted)";}}
+    // Spherical polygon area (m²) — fórmula L'Huilier-style sobre una esfera de radio 6378137
+    function polygonAreaM2(latlngs){
+      if(!latlngs||latlngs.length<3) return 0;
+      const R=6378137; let area=0;
+      for(let i=0;i<latlngs.length;i++){
+        const p1=latlngs[i], p2=latlngs[(i+1)%latlngs.length];
+        const lon1=p1.lng*Math.PI/180, lon2=p2.lng*Math.PI/180;
+        const lat1=p1.lat*Math.PI/180, lat2=p2.lat*Math.PI/180;
+        area += (lon2-lon1)*(2+Math.sin(lat1)+Math.sin(lat2));
+      }
+      return Math.abs(area*R*R/2);
+    }
+    function geomToLatLngs(geometry){
+      // Acepta Polygon o MultiPolygon, devuelve el primer anillo exterior como array de {lat,lng}
+      if(!geometry) return [];
+      const coords = geometry.type==="MultiPolygon" ? geometry.coordinates[0][0] : geometry.coordinates[0];
+      return coords.map(c=>L.latLng(c[1],c[0]));
+    }
+    function initNdviMap(){
+      if(ndviMap) { ndviMap.invalidateSize(); return; }
+      if(typeof L==="undefined" || !$("ndvi_map")) return;
+      ndviMap = L.map("ndvi_map", {center:[-32.8, -56.0], zoom:7});
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom:19, attribution:"© OpenStreetMap"
+      }).addTo(ndviMap);
+      const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom:19, attribution:"Tiles © Esri"
+      });
+      L.control.layers({"Mapa":osm, "Satélite":sat}, null, {position:"topright"}).addTo(ndviMap);
+      ndviDrawn = new L.FeatureGroup().addTo(ndviMap);
+      const drawCtrl = new L.Control.Draw({
+        edit:{featureGroup:ndviDrawn, remove:true},
+        draw:{polygon:{showArea:true, allowIntersection:false, shapeOptions:{color:"#15785a", weight:2}},
+              rectangle:{shapeOptions:{color:"#15785a"}}, polyline:false, circle:false, marker:false, circlemarker:false}
+      });
+      ndviMap.addControl(drawCtrl);
+      ndviMap.on(L.Draw.Event.CREATED, e=>{
+        ndviDrawn.addLayer(e.layer);
+        const gj = e.layer.toGeoJSON();
+        const ll = e.layer.getLatLngs()[0];
+        const ha = polygonAreaM2(ll)/10000;
+        ndviFields.push({id:ndviUid(), name:`Potrero ${ndviFields.length+1}`, pastura:"cn", ha:+ha.toFixed(2), geometry:gj.geometry});
+        e.layer._ndviId = ndviFields[ndviFields.length-1].id;
+        saveNdviFields(); renderNdviList();
+      });
+      ndviMap.on(L.Draw.Event.DELETED, e=>{
+        e.layers.eachLayer(l=>{ ndviFields = ndviFields.filter(f=>f.id!==l._ndviId); });
+        saveNdviFields(); renderNdviList();
+      });
+      // Cargar potreros guardados
+      ndviFields = loadNdviFields();
+      ndviFields.forEach(f=>{
+        const layer = L.geoJSON(f.geometry,{style:{color:"#15785a",weight:2}}).getLayers()[0];
+        layer._ndviId = f.id;
+        ndviDrawn.addLayer(layer);
+      });
+      if(ndviFields.length>0){ try{ ndviMap.fitBounds(ndviDrawn.getBounds(), {padding:[20,20]});}catch(e){} }
+      renderNdviList();
+      // Cargar credenciales si existen
+      const creds = loadNdviCreds();
+      if(creds){ $("ndvi_cid").value=creds.id||""; $("ndvi_csec").value=creds.secret||""; ndviCredsStatus("Credenciales cargadas desde el navegador.","#15785a"); }
+      $("ndvi_year").value = new Date().getFullYear();
+    }
+    function renderNdviList(){
+      const root = $("ndvi_fields_list"); if(!root) return;
+      if(ndviFields.length===0){
+        root.innerHTML = `<div style="padding:1rem;text-align:center;color:var(--muted);font-size:12px">Aún no hay potreros. Usá la herramienta de polígono o rectángulo en el mapa.</div>`;
+        return;
+      }
+      root.innerHTML = "";
+      ndviFields.forEach((f,idx)=>{
+        const row = document.createElement("div");
+        row.className = "ndvi-field-row";
+        row.innerHTML = `
+          <input type="text" data-id="${f.id}" data-k="name" value="${f.name.replace(/"/g,"&quot;")}"/>
+          <select data-id="${f.id}" data-k="pastura">
+            <option value="cn"${f.pastura==="cn"?" selected":""}>Campo natural</option>
+            <option value="pr"${f.pastura==="pr"?" selected":""}>Pradera</option>
+            <option value="vi"${f.pastura==="vi"?" selected":""}>Verdeo inv.</option>
+            <option value="vv"${f.pastura==="vv"?" selected":""}>Verdeo ver.</option>
+          </select>
+          <span class="ha">${f.ha.toFixed(1)} ha</span>
+          <button class="del" data-id="${f.id}" title="Eliminar">✕</button>`;
+        root.appendChild(row);
+      });
+      root.querySelectorAll("input[data-k],select[data-k]").forEach(el=>{
+        el.addEventListener("change",e=>{
+          const id=e.target.dataset.id, k=e.target.dataset.k;
+          const f=ndviFields.find(x=>x.id===id); if(f){ f[k]=e.target.value; saveNdviFields(); }
+        });
+      });
+      root.querySelectorAll("button.del").forEach(b=>{
+        b.addEventListener("click",e=>{
+          const id=e.target.dataset.id;
+          ndviFields = ndviFields.filter(x=>x.id!==id);
+          ndviDrawn.eachLayer(l=>{ if(l._ndviId===id) ndviDrawn.removeLayer(l); });
+          saveNdviFields(); renderNdviList();
+        });
+      });
+    }
+    async function getNdviToken(){
+      if(ndviToken && Date.now()<ndviTokenExp-30000) return ndviToken;
+      const creds = loadNdviCreds();
+      if(!creds||!creds.id||!creds.secret) throw new Error("Faltan credenciales CDSE.");
+      const body = new URLSearchParams({grant_type:"client_credentials", client_id:creds.id, client_secret:creds.secret});
+      let r;
+      try{
+        r = await fetch(NDVI_TOKEN_URL,{method:"POST", mode:"cors", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body});
+      }catch(netErr){
+        throw new Error("Sin conexión al servidor de Copernicus. Causa probable: bloqueo CORS, antivirus, VPN, extensión del navegador o sin internet. Detalle: "+netErr.message+" | Origen actual: "+location.origin);
+      }
+      if(!r.ok){ const t=await r.text(); throw new Error("Token rechazado ("+r.status+"): "+t.slice(0,200)); }
+      const j = await r.json();
+      ndviToken = j.access_token;
+      ndviTokenExp = Date.now() + (j.expires_in||600)*1000;
+      return ndviToken;
+    }
+    async function pingNdviProxy(){
+      const r = await fetch("/api/cdse", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({action:"ping"})
+      });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+      return j;
+    }
+    async function fetchNdviSeriesViaProxy(geometry, year, cloudMax){
+      const payload = {
+        input:{
+          bounds:{ geometry, properties:{crs:"http://www.opengis.net/def/crs/OGC/1.3/CRS84"} },
+          data:[{ type:"sentinel-2-l2a", dataFilter:{ maxCloudCoverage: cloudMax, mosaickingOrder:"leastCC" } }]
+        },
+        aggregation:{
+          timeRange:{ from:`${year}-01-01T00:00:00Z`, to:`${year}-12-31T23:59:59Z` },
+          aggregationInterval:{ of:"P1M" },
+          evalscript: NDVI_EVALSCRIPT,
+          resx:10, resy:10
+        },
+        calculations:{ ndvi:{ statistics:{ default:{ percentiles:{ k:[10,50,90] } } } } }
+      };
+      const r = await fetch("/api/cdse",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ action:"statistics", payload })
+      });
+      const text = await r.text();
+      if(!r.ok){ throw new Error("Proxy "+r.status+": "+text.slice(0,300)); }
+      const j = JSON.parse(text);
+      return parseNdviStatsResponse(j);
+    }
+    async function fetchNdviSeries(geometry, year, cloudMax, token){
+      const body = {
+        input:{
+          bounds:{ geometry, properties:{crs:"http://www.opengis.net/def/crs/OGC/1.3/CRS84"} },
+          data:[{ type:"sentinel-2-l2a", dataFilter:{ maxCloudCoverage: cloudMax, mosaickingOrder:"leastCC" } }]
+        },
+        aggregation:{
+          timeRange:{ from:`${year}-01-01T00:00:00Z`, to:`${year}-12-31T23:59:59Z` },
+          aggregationInterval:{ of:"P1M" },
+          evalscript: NDVI_EVALSCRIPT,
+          resx:10, resy:10
+        },
+        calculations:{ ndvi:{ statistics:{ default:{ percentiles:{ k:[10,50,90] } } } } }
+      };
+      const r = await fetch(NDVI_STATS_URL,{
+        method:"POST",
+        headers:{ "Authorization":"Bearer "+token, "Content-Type":"application/json", "Accept":"application/json" },
+        body: JSON.stringify(body)
+      });
+      if(!r.ok){ const t=await r.text(); throw new Error("Statistical API "+r.status+": "+t.slice(0,300)); }
+      const j = await r.json();
+      return parseNdviStatsResponse(j);
+    }
+    function parseNdviStatsResponse(j){
+      // Devuelve array por intervalo mensual
+      const out = Array(12).fill(null);
+      (j.data||[]).forEach(d=>{
+        const m = new Date(d.interval.from).getUTCMonth();
+        const stats = d.outputs?.ndvi?.bands?.B0?.stats;
+        if(!stats) return;
+        const pct = stats.percentiles||{};
+        out[m] = {
+          median: pct["50.0"] ?? pct["50"] ?? stats.mean,
+          p10: pct["10.0"] ?? pct["10"],
+          p90: pct["90.0"] ?? pct["90"],
+          mean: stats.mean, std: stats.stDev,
+          n: stats.sampleCount, nValid: stats.sampleCount - (stats.noDataCount||0)
+        };
+      });
+      return out;
+    }
+    function ndviQualityColor(s){
+      if(!s) return "#9ca3af";
+      const ratio = s.n>0 ? s.nValid/s.n : 0;
+      if(ratio<0.2) return "#dc2626";
+      if(ratio<0.5) return "#f59e0b";
+      return "#16a34a";
+    }
+    function renderNdviQualityGrid(perPastura){
+      const root = $("ndvi_quality_grid"); if(!root) return;
+      const meses=["E","F","M","A","M","J","J","A","S","O","N","D"];
+      const labels = {cn:"Campo natural", pr:"Pradera", vi:"Verdeo inv.", vv:"Verdeo ver."};
+      let html = `<div style="font-size:12px;font-weight:700;margin-top:8px">Calidad del dato satelital (% pixeles válidos por mes)</div>`;
+      ["cn","pr","vi","vv"].forEach(k=>{
+        const arr = perPastura[k]; if(!arr) return;
+        html += `<div style="margin-top:4px"><div style="font-size:11px;color:var(--muted)">${labels[k]}</div><div class="ndvi-quality">`;
+        for(let m=0;m<12;m++){
+          const s=arr[m]; const c=ndviQualityColor(s);
+          const tip = s ? `${s.nValid}/${s.n} px válidos · NDVI ${(s.median||0).toFixed(2)}` : "sin imagen útil";
+          html += `<div class="ndvi-q-cell" style="background:${c}" title="${tip}">${meses[m]}</div>`;
+        }
+        html += `</div></div>`;
+      });
+      root.innerHTML = html;
+    }
+    async function runNdviAll(){
+      try{
+        if(ndviFields.length===0){ ndviStatus("Dibujá al menos un potrero en el mapa.","#dc2626"); return; }
+        const useProxy = await detectNdviProxy();
+        let token = null;
+        if(!useProxy){
+          ndviStatus("Obteniendo token de Copernicus…");
+          token = await getNdviToken();
+        }
+        const year = parseInt($("ndvi_year").value)||new Date().getFullYear();
+        const cloud = parseInt($("ndvi_cloud").value)||60;
+        const groups = {cn:[], pr:[], vi:[], vv:[]};
+        // Una request por potrero
+        for(let i=0;i<ndviFields.length;i++){
+          const f = ndviFields[i];
+          ndviStatus(`Consultando NDVI (${i+1}/${ndviFields.length}): ${f.name}…`);
+          try{
+            const series = useProxy
+              ? await fetchNdviSeriesViaProxy(f.geometry, year, cloud)
+              : await fetchNdviSeries(f.geometry, year, cloud, token);
+            groups[f.pastura].push({ha:f.ha, series});
+          }catch(err){
+            console.error("NDVI", f.name, err);
+            ndviStatus(`Error en ${f.name}: ${err.message}`,"#dc2626");
+          }
+        }
+        // Promedio ponderado por área dentro de cada pastura
+        const perPastura = {cn:Array(12).fill(null), pr:Array(12).fill(null), vi:Array(12).fill(null), vv:Array(12).fill(null)};
+        Object.keys(groups).forEach(k=>{
+          for(let m=0;m<12;m++){
+            let wsum=0, vsum=0, nValid=0, nTot=0;
+            groups[k].forEach(g=>{
+              const s=g.series[m]; if(!s||!isFinite(s.median)) return;
+              wsum += g.ha; vsum += s.median*g.ha;
+              nValid += s.nValid||0; nTot += s.n||0;
+            });
+            if(wsum>0){ perPastura[k][m] = {median:vsum/wsum, n:nTot, nValid}; }
+          }
+        });
+        // Llenar la tabla NDVI mensual
+        buildNdviTable();
+        ["cn","pr","vi","vv"].forEach(k=>{
+          for(let m=0;m<12;m++){
+            const cell = perPastura[k][m];
+            const inp = $(`bf_ndvi_${k}_${m}`);
+            if(inp){ inp.value = cell ? cell.median.toFixed(2) : 0; }
+          }
+        });
+        renderNdviQualityGrid(perPastura);
+        localStorage.setItem(NDVI_CACHE_KEY, JSON.stringify({year, perPastura, ts:Date.now()}));
+        ndviStatus(`✓ NDVI calculado para ${ndviFields.length} potrero(s) en ${year}.`,"#15785a");
+        calcForrajero();
+      }catch(err){
+        console.error(err);
+        ndviStatus("Error: "+err.message,"#dc2626");
+      }
+    }
+    function bindNdviEvents(){
+      const sv = $("ndvi_save_creds"); if(!sv) return;
+      sv.addEventListener("click",()=>{
+        const id=$("ndvi_cid").value.trim(), secret=$("ndvi_csec").value.trim();
+        if(!id||!secret){ ndviCredsStatus("Faltan id o secret.","#dc2626"); return; }
+        saveNdviCreds({id,secret});
+        ndviToken=null; ndviTokenExp=0;
+        ndviCredsStatus("Guardado solo en este navegador.","#15785a");
+      });
+      $("ndvi_clear_creds").addEventListener("click",()=>{
+        localStorage.removeItem(NDVI_CREDS_KEY);
+        $("ndvi_cid").value=""; $("ndvi_csec").value="";
+        ndviToken=null; ndviTokenExp=0;
+        ndviCredsStatus("Credenciales borradas.","#9ca3af");
+      });
+      $("ndvi_test_creds").addEventListener("click", async ()=>{
+        try{
+          ndviCredsStatus("Probando…");
+          const useProxy = await detectNdviProxy();
+          if(useProxy){
+            await pingNdviProxy();
+            ndviCredsStatus("✓ Conexión OK vía proxy Vercel. Ya podés calcular NDVI.","#15785a");
+            return;
+          }
+          const id=$("ndvi_cid").value.trim(), secret=$("ndvi_csec").value.trim();
+          if(id&&secret) saveNdviCreds({id,secret});
+          ndviToken=null; ndviTokenExp=0;
+          await getNdviToken();
+          ndviCredsStatus("✓ Conexión OK. Ya podés calcular NDVI.","#15785a");
+        }catch(err){ ndviCredsStatus("✗ "+err.message,"#dc2626"); }
+      });
+      $("ndvi_run").addEventListener("click", runNdviAll);
+      $("ndvi_clear").addEventListener("click",()=>{
+        if(!confirm("¿Eliminar todos los potreros guardados?")) return;
+        ndviFields=[]; saveNdviFields();
+        if(ndviDrawn) ndviDrawn.clearLayers();
+        renderNdviList();
+        ndviStatus("Potreros eliminados.");
+      });
+      $("ndvi_export").addEventListener("click",()=>{
+        const fc = {type:"FeatureCollection", features:ndviFields.map(f=>({type:"Feature", properties:{name:f.name,pastura:f.pastura,ha:f.ha}, geometry:f.geometry}))};
+        const blob = new Blob([JSON.stringify(fc,null,2)],{type:"application/geo+json"});
+        const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="potreros.geojson"; a.click(); URL.revokeObjectURL(a.href);
+      });
+      $("ndvi_import").addEventListener("click",()=>$("ndvi_file").click());
+      $("ndvi_file").addEventListener("change", e=>{
+        const file=e.target.files[0]; if(!file) return;
+        const r=new FileReader();
+        r.onload = ev=>{
+          try{
+            const j=JSON.parse(ev.target.result);
+            const feats = j.type==="FeatureCollection" ? j.features : (j.type==="Feature" ? [j] : []);
+            feats.forEach(ft=>{
+              if(!ft.geometry) return;
+              const geom = ft.geometry;
+              if(geom.type!=="Polygon" && geom.type!=="MultiPolygon") return;
+              const layer = L.geoJSON(geom,{style:{color:"#15785a",weight:2}}).getLayers()[0];
+              const id = ndviUid();
+              layer._ndviId = id;
+              ndviDrawn.addLayer(layer);
+              const ll = geomToLatLngs(geom);
+              const ha = polygonAreaM2(ll)/10000;
+              ndviFields.push({
+                id, name: ft.properties?.name || `Potrero ${ndviFields.length+1}`,
+                pastura: ft.properties?.pastura || "cn",
+                ha: +ha.toFixed(2), geometry: geom
+              });
+            });
+            saveNdviFields(); renderNdviList();
+            try{ ndviMap.fitBounds(ndviDrawn.getBounds(),{padding:[20,20]});}catch(e){}
+            ndviStatus(`Importados ${feats.length} potreros.`,"#15785a");
+          }catch(err){ ndviStatus("Error al leer GeoJSON: "+err.message,"#dc2626"); }
+          e.target.value="";
+        };
+        r.readAsText(file);
+      });
     }
     // Viticultura / Fruticultura
     function calcViticultura(){
@@ -1173,6 +1652,8 @@
     calcForrajero();
     calcFlujo();
     calcViticultura();
+    bindNdviEvents();
+    detectNdviProxy();
     // Fecha para el encabezado de impresión
     $("print-date").textContent = "Informe generado el " + new Date().toLocaleDateString("es-UY",{year:"numeric",month:"long",day:"numeric"});
   </script>
