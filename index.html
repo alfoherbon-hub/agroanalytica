@@ -966,7 +966,11 @@ function evaluatePixel(s){
       const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         maxZoom:19, attribution:"Tiles © Esri"
       });
-      L.control.layers({"Mapa":osm, "Satélite":sat}, null, {position:"topright"}).addTo(ndviMap);
+      // Sentinel-2 cloudless mosaic — actualizado anualmente, color natural sin nubes
+      const s2cloudless = L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {
+        maxZoom:18, attribution:"Sentinel-2 cloudless 2024 by EOX IT Services"
+      });
+      L.control.layers({"Mapa":osm, "Satélite (Esri)":sat, "Sentinel-2 sin nubes 2024":s2cloudless}, null, {position:"topright"}).addTo(ndviMap);
       ndviDrawn = new L.FeatureGroup().addTo(ndviMap);
       const drawCtrl = new L.Control.Draw({
         edit:{featureGroup:ndviDrawn, remove:true},
@@ -1113,19 +1117,34 @@ function evaluatePixel(s){
       return parseNdviStatsResponse(j);
     }
     function parseNdviStatsResponse(j){
-      // Devuelve array por intervalo mensual
+      // Guardar cruda para diagnóstico
+      window.lastNdviResponse = j;
       const out = Array(12).fill(null);
-      (j.data||[]).forEach(d=>{
+      const data = j.data || [];
+      data.forEach(d=>{
+        if(!d.interval) return;
         const m = new Date(d.interval.from).getUTCMonth();
-        const stats = d.outputs?.ndvi?.bands?.B0?.stats;
+        // Buscar stats en cualquier output / banda (defensivo)
+        let stats = null;
+        const outs = d.outputs || {};
+        for(const outKey of Object.keys(outs)){
+          const bands = outs[outKey]?.bands;
+          if(!bands) continue;
+          for(const bKey of Object.keys(bands)){
+            if(bands[bKey]?.stats){ stats = bands[bKey].stats; break; }
+          }
+          if(stats) break;
+        }
         if(!stats) return;
-        const pct = stats.percentiles||{};
+        const pct = stats.percentiles || {};
+        const median = pct["50.0"] ?? pct["50"] ?? pct.p50 ?? pct["P50"] ?? stats.mean;
+        if(!Number.isFinite(median)) return;
         out[m] = {
-          median: pct["50.0"] ?? pct["50"] ?? stats.mean,
-          p10: pct["10.0"] ?? pct["10"],
-          p90: pct["90.0"] ?? pct["90"],
-          mean: stats.mean, std: stats.stDev,
-          n: stats.sampleCount, nValid: stats.sampleCount - (stats.noDataCount||0)
+          median, mean: stats.mean, std: stats.stDev,
+          p10: pct["10.0"] ?? pct["10"] ?? pct.p10,
+          p90: pct["90.0"] ?? pct["90"] ?? pct.p90,
+          n: stats.sampleCount || 0,
+          nValid: (stats.sampleCount || 0) - (stats.noDataCount || 0)
         };
       });
       return out;
@@ -1204,7 +1223,23 @@ function evaluatePixel(s){
         });
         renderNdviQualityGrid(perPastura);
         localStorage.setItem(NDVI_CACHE_KEY, JSON.stringify({year, perPastura, ts:Date.now()}));
-        ndviStatus(`✓ NDVI calculado para ${ndviFields.length} potrero(s) en ${year}.`,"#15785a");
+        // Verificar si hubo algún dato real
+        let totalCells = 0;
+        ["cn","pr","vi","vv"].forEach(k=>{ for(let m=0;m<12;m++){ if(perPastura[k][m]) totalCells++; } });
+        if(totalCells === 0){
+          const raw = window.lastNdviResponse ? JSON.stringify(window.lastNdviResponse, null, 2) : "(sin respuesta)";
+          ndviStatus(`✗ NDVI sin datos válidos. Click acá para ver respuesta cruda.`,"#dc2626");
+          $("ndvi_status").style.cursor = "pointer";
+          $("ndvi_status").onclick = ()=>{
+            const w = window.open("", "_blank");
+            if(w){ w.document.write("<pre style='font-family:monospace;font-size:12px;padding:1rem;'>"+raw.replace(/</g,"&lt;")+"</pre>"); }
+            else { alert(raw.slice(0,2000)); }
+          };
+        } else {
+          ndviStatus(`✓ NDVI calculado para ${ndviFields.length} potrero(s) en ${year}. ${totalCells} valores mensuales obtenidos.`,"#15785a");
+          $("ndvi_status").onclick = null;
+          $("ndvi_status").style.cursor = "default";
+        }
         calcForrajero();
       }catch(err){
         console.error(err);

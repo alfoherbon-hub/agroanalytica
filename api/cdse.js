@@ -59,6 +59,8 @@ export default async function handler(req, res) {
         body: JSON.stringify(req.body.payload || {})
       });
       const text = await r.text();
+      console.log("[CDSE statistics] status=" + r.status + " bytes=" + text.length);
+      if (r.status >= 400) console.log("[CDSE statistics] error body:", text.slice(0, 500));
       res.status(r.status);
       res.setHeader("Content-Type", "application/json");
       return res.send(text);
